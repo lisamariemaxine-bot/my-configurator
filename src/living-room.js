@@ -17,6 +17,7 @@ export const PALETTE = {
   lampGlow: '#FFE0A3',
   skin: '#C98265',
   curlyHair: '#3B2924',
+  white: '#FFFFFF',
   blouse: '#D77C9E',
   shirt: '#426B83',
   pants: '#4A3B39',
@@ -53,6 +54,7 @@ const THEME_PALETTES = {
 export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacterClick = () => {}, onCharacterPosition = () => {}) {
   const scene = new THREE.Scene()
   const camera = new THREE.OrthographicCamera(-7, 7, 5, -5, 0.1, 80)
+  const roomViewOffset = -0.6
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true })
   renderer.setPixelRatio(0.5)
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -68,7 +70,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   controls.maxPolarAngle = 1.3
   controls.minDistance = 11
   controls.maxDistance = 22
-  controls.target.set(0.2, 1.25, -0.15)
+  controls.target.set(0.2 + roomViewOffset, 1.25, -0.15 + roomViewOffset)
 
   const materials = Object.fromEntries(Object.entries(PALETTE).map(([name, color]) => [
     name,
@@ -118,20 +120,20 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     const desk = getThemeGroup('desk')
     desk.position.set(-6.7, 0, 0.6)
     desk.rotation.y = Math.PI
-    box(2.32, 0.14, 0.78, -3.35, 1.04, -3.45, 'darkWood', desk)
-    box(2.1, 0.08, 0.6, -3.35, 1.15, -3.45, 'brown', desk)
-    for (const x of [-4.27, -2.43]) for (const z of [-3.72, -3.18]) box(0.12, 0.96, 0.12, x, 0.52, z, 'darkWood', desk)
-    box(0.54, 0.66, 0.68, -4.08, 0.68, -3.46, 'darkWood', desk)
-    box(0.4, 0.24, 0.035, -4.08, 0.84, -3.08, 'tan', desk)
-    box(0.4, 0.24, 0.035, -4.08, 0.53, -3.08, 'tan', desk)
+    box(2.32, 0.14, 0.78, -3.35, 1.04, -3.45, 'white', desk)
+    box(2.1, 0.08, 0.6, -3.35, 1.15, -3.45, 'white', desk)
+    for (const x of [-4.27, -2.43]) for (const z of [-3.72, -3.18]) box(0.12, 0.96, 0.12, x, 0.52, z, 'white', desk)
+    box(0.54, 0.66, 0.68, -4.08, 0.68, -3.46, 'white', desk)
+    box(0.4, 0.24, 0.035, -4.08, 0.84, -3.08, 'white', desk)
+    box(0.4, 0.24, 0.035, -4.08, 0.53, -3.08, 'white', desk)
     box(0.96, 0.64, 0.08, -3.22, 1.59, -3.72, 'darkWood', desk)
     box(0.82, 0.5, 0.025, -3.22, 1.59, -3.65, 'darkGray', desk)
     box(0.1, 0.36, 0.1, -3.22, 1.19, -3.58, 'darkWood', desk)
     box(0.58, 0.06, 0.22, -3.22, 1.2, -3.14, 'darkGray', desk)
-    box(0.86, 0.14, 0.86, -3.3, 0.73, -2.42, 'terracotta', desk)
-    box(0.72, 0.1, 0.72, -3.3, 0.84, -2.42, 'cream', desk)
+    box(0.86, 0.14, 0.86, -3.3, 0.73, -2.42, 'olive', desk)
+    box(0.72, 0.1, 0.72, -3.3, 0.84, -2.42, 'olive', desk)
     for (const x of [-3.57, -3.03]) for (const z of [-2.68, -2.16]) box(0.1, 0.65, 0.1, x, 0.35, z, 'darkWood', desk)
-    box(0.82, 0.58, 0.12, -3.3, 1.2, -2.02, 'terracotta', desk)
+    box(0.82, 0.58, 0.12, -3.3, 1.2, -2.02, 'olive', desk)
     createTableLamp(desk, -4.05, 1.19, -3.45)
   }
 
@@ -366,12 +368,6 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       [-4.61, 1.2], [-4.4, 1.2], [-4.19, 1.2],
     ]
 
-    for (const x of [-4.4, -0.76]) {
-      box(0.76, 0.82, 0.38, x, 2.7, -4.16, 'darkWood', kitchen)
-      box(0.68, 0.72, 0.04, x, 2.7, -3.95, 'brown', kitchen)
-      box(0.05, 0.06, 0.035, x + 0.23, 2.7, -3.92, 'parquetLight', kitchen)
-    }
-
     function storeFoodItem(product) {
       if (foodItems.length >= foodSlots.length) return false
       const [x, y] = foodSlots[foodItems.length]
@@ -430,7 +426,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     const dining = getThemeGroup('dining')
     const x = -2.35
     const z = -0.9
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.14, 12), materials.darkWood)
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.14, 1.56), materials.darkWood)
     top.position.set(x, 0.78, z)
     top.castShadow = true
     top.receiveShadow = true
@@ -446,8 +442,6 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
 
     createDiningChair(x, z - 1.08, 0, 'terracotta')
     createDiningChair(x, z + 1.08, Math.PI, 'mustard')
-    createDiningChair(x - 1.08, z, Math.PI / 2, 'olive')
-    createDiningChair(x + 1.08, z, -Math.PI / 2, 'blue')
   }
 
   function createSideTableLamp() {
@@ -473,7 +467,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     box(0.11, 0.24, 0.12, x, 0.7, z - 0.88, 'darkWood', tv)
     box(0.11, 0.24, 0.12, x, 0.7, z + 0.88, 'darkWood', tv)
     box(0.34, 1.12, 1.88, x, 1.34, z, 'darkWood', tv)
-    box(0.025, 0.94, 1.62, x - 0.18, 1.34, z, 'brown', tv)
+    box(0.025, 0.94, 1.62, x - 0.1575, 1.34, z, 'brown', tv)
 
     for (const side of [1]) {
       const screenFaceX = x + side * 0.18
@@ -764,6 +758,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     }
 
     const legs = []
+    const shoes = []
     for (const side of [-1, 1]) {
       const thigh = new THREE.Group()
       thigh.position.x = side * 0.16
@@ -773,16 +768,18 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       knee.position.y = -0.42
       thigh.add(knee)
       addBox(knee, 0.16, 0.42, 0.16, 0, -0.21, 0, 'pants')
-      addBox(knee, 0.2, 0.12, 0.3, 0, -0.43, 0.06, 'shoes')
+      shoes.push(addBox(knee, 0.2, 0.12, 0.3, 0, -0.43, 0.06, 'shoes'))
       legs.push({ thigh, knee })
     }
 
     let foodLevel = 78
     let previousUpdateTime = null
 
+    const chairSeat = [-3.4, 3.02]
+    const sofaSeat = [3.55, -0.15]
     const route = [
-      [-3.4, 3.02], [-3.4, 1.5], [-4.4, 1.5], [-4.4, 0.9],
-      [-1.1, 0.9], [3.15, 0.9], [3.15, -1.4], [3.55, -0.15],
+      [-3.4, 2.35], [-4.4, 1.55], [0.97, 1.55], [0.97, -3.9],
+      [3, -3.9], [3, -2.25],
     ]
     const smoothStep = amount => {
       const value = THREE.MathUtils.clamp(amount, 0, 1)
@@ -793,9 +790,16 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
 
     function getWalkPose(progress, returning) {
       const points = returning ? [...route].reverse() : route
-      const scaled = THREE.MathUtils.clamp(progress, 0, 1) * (points.length - 1)
-      const segment = Math.min(points.length - 2, Math.floor(scaled))
-      const local = scaled - segment
+      const lengths = points.slice(1).map((point, index) =>
+        Math.hypot(point[0] - points[index][0], point[1] - points[index][1]))
+      const totalLength = lengths.reduce((total, length) => total + length, 0)
+      let distance = THREE.MathUtils.clamp(progress, 0, 1) * totalLength
+      let segment = 0
+      while (segment < lengths.length - 1 && distance > lengths[segment]) {
+        distance -= lengths[segment]
+        segment++
+      }
+      const local = distance / lengths[segment]
       const from = points[segment]
       const to = points[segment + 1]
       let yaw = headingBetween(from, to)
@@ -810,10 +814,10 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       }
     }
 
-    function update(time) {
+    function update(time, working = false) {
       if (previousUpdateTime !== null) foodLevel = Math.max(10, foodLevel - (time - previousUpdateTime) * 0.07)
       previousUpdateTime = time
-      const phase = time % 28
+      const phase = working ? 0 : time % 31
       let x
       let z
       let yaw
@@ -823,28 +827,50 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       let entertainment
 
       if (phase < 7) {
-        x = route[0][0]; z = route[0][1]; yaw = 0; sit = 1; seatHeight = 0.84; action = 'computer'
+        x = chairSeat[0]; z = chairSeat[1]; yaw = 0; sit = 1; seatHeight = 0.89; action = 'computer'
         entertainment = 68 - phase * 2
-      } else if (phase < 12.5) {
-        const progress = (phase - 7) / 5.5
-        const pose = getWalkPose(progress, false)
-        sit = 1 - smoothStep(progress / 0.14)
-        x = pose.x; z = pose.z; yaw = pose.yaw; seatHeight = 0.84 * (1 - sit); action = 'walk'
+      } else if (phase < 14.5) {
+        const progress = (phase - 7) / 7.5
+        const standUp = smoothStep(progress / 0.08)
+        const walkProgress = THREE.MathUtils.clamp((progress - 0.08) / 0.92, 0, 1)
+        const pose = getWalkPose(walkProgress, false)
+        sit = 1 - standUp
+        x = THREE.MathUtils.lerp(chairSeat[0], pose.x, standUp)
+        z = THREE.MathUtils.lerp(chairSeat[1], pose.z, standUp)
+        yaw = shortestAngle(0, pose.yaw, standUp)
+        seatHeight = 0.89 * sit
+        action = standUp < 1 ? 'computer' : 'walk'
         entertainment = 54 + progress * 6
-      } else if (phase < 21) {
-        x = route[route.length - 1][0]; z = route[route.length - 1][1]; yaw = -Math.PI / 2; sit = 1; seatHeight = 0.84; action = 'television'
-        entertainment = 60 + ((phase - 12.5) / 8.5) * 38
+      } else if (phase < 23) {
+        const sitDown = smoothStep((phase - 14.5) / 1.4)
+        x = THREE.MathUtils.lerp(route[route.length - 1][0], sofaSeat[0], sitDown)
+        z = THREE.MathUtils.lerp(route[route.length - 1][1], sofaSeat[1], sitDown)
+        yaw = shortestAngle(headingBetween(route[route.length - 2], route[route.length - 1]), -Math.PI / 2, sitDown)
+        sit = sitDown
+        seatHeight = 0.97 * sitDown
+        action = 'television'
+        entertainment = 60 + ((phase - 14.5) / 8.5) * 38
       } else {
-        const progress = (phase - 21) / 7
-        const pose = getWalkPose(progress, true)
-        sit = smoothStep((progress - 0.86) / 0.14)
-        x = pose.x; z = pose.z; yaw = pose.yaw; seatHeight = 0.84 * sit; action = 'walk'
+        const progress = (phase - 23) / 8
+        const standUp = smoothStep(progress / 0.12)
+        const walkProgress = THREE.MathUtils.clamp((progress - 0.12) / 0.78, 0, 1)
+        const chairSit = smoothStep((progress - 0.9) / 0.1)
+        const pose = getWalkPose(walkProgress, true)
+        sit = Math.max(1 - standUp, chairSit)
+        x = THREE.MathUtils.lerp(sofaSeat[0], pose.x, standUp)
+        z = THREE.MathUtils.lerp(sofaSeat[1], pose.z, standUp)
+        yaw = shortestAngle(-Math.PI / 2, pose.yaw, standUp)
+        x = THREE.MathUtils.lerp(x, chairSeat[0], chairSit)
+        z = THREE.MathUtils.lerp(z, chairSeat[1], chairSit)
+        yaw = shortestAngle(yaw, 0, chairSit)
+        seatHeight = THREE.MathUtils.lerp(0.97, 0.89, walkProgress) * sit
+        action = standUp < 1 ? 'television' : chairSit > 0 ? 'computer' : 'walk'
         entertainment = 98 - progress * 30
       }
 
       root.position.set(x, seatHeight, z)
       root.rotation.y = yaw
-      upperBody.position.y = -0.48 * sit + Math.abs(Math.sin(time * 9)) * 0.035 * (1 - sit)
+      upperBody.position.y = -0.7 * sit + Math.abs(Math.sin(time * 9)) * 0.035 * (1 - sit)
       arms.forEach((arm, index) => {
         const swing = Math.sin(time * 8 + index * Math.PI) * 0.42 * (1 - sit)
         const typing = Math.sin(time * 15 + index * 1.7) * 0.07
@@ -855,8 +881,17 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
         const stride = Math.sin(time * 8 + index * Math.PI) * 0.38 * (1 - sit)
         thigh.position.y = 0.78 * (1 - sit)
         thigh.rotation.x = -Math.PI / 2 * sit + stride
-        knee.rotation.x = Math.PI / 2 * sit + Math.max(0, stride) * 0.45
+        const seatedKneeBend = action === 'computer' ? 0.4 : action === 'television' ? 0.05 : 0
+        knee.rotation.x = (Math.PI / 2 + seatedKneeBend) * sit + Math.max(0, stride) * 0.45
       })
+      if (action === 'walk' && sit < 0.02) {
+        root.updateMatrixWorld(true)
+        let lowestShoeY = Infinity
+        for (const shoe of shoes) {
+          lowestShoeY = Math.min(lowestShoeY, new THREE.Box3().setFromObject(shoe).min.y)
+        }
+        root.position.y += 0.032 - lowestShoeY
+      }
 
       const food = Math.round(foodLevel)
       const happy = Math.round((food + entertainment) / 2)
@@ -920,9 +955,10 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   }
   renderer.domElement.addEventListener('click', handleCharacterClick)
   let animationFrame
+  let isWorking = false
   const characterScreenPosition = new THREE.Vector3()
   function animate(timestamp) {
-    man.update(timestamp / 1000)
+    man.update(timestamp / 1000, isWorking)
     controls.update()
     man.root.getWorldPosition(characterScreenPosition)
     characterScreenPosition.y += 1.05
@@ -955,13 +991,45 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   const observer = new ResizeObserver(resize)
   observer.observe(container)
 
+  function centerRoomInView() {
+    scene.updateMatrixWorld(true)
+    camera.updateMatrixWorld(true)
+    const bounds = new THREE.Box3().setFromObject(room)
+    const corner = new THREE.Vector3()
+    const projectedBounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity }
+
+    for (const x of [bounds.min.x, bounds.max.x]) {
+      for (const y of [bounds.min.y, bounds.max.y]) {
+        for (const z of [bounds.min.z, bounds.max.z]) {
+          corner.set(x, y, z).project(camera)
+          projectedBounds.minX = Math.min(projectedBounds.minX, corner.x)
+          projectedBounds.maxX = Math.max(projectedBounds.maxX, corner.x)
+          projectedBounds.minY = Math.min(projectedBounds.minY, corner.y)
+          projectedBounds.maxY = Math.max(projectedBounds.maxY, corner.y)
+        }
+      }
+    }
+
+    const horizontalOffset = (projectedBounds.minX + projectedBounds.maxX) / 2
+      * (camera.right - camera.left) / (2 * camera.zoom)
+    const verticalOffset = (projectedBounds.minY + projectedBounds.maxY) / 2
+      * (camera.top - camera.bottom) / (2 * camera.zoom)
+    const offset = new THREE.Vector3()
+      .setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(horizontalOffset)
+      .add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).multiplyScalar(verticalOffset))
+    camera.position.add(offset)
+    controls.target.add(offset)
+    controls.update()
+  }
+
   function resetView() {
     controls.enableDamping = false
-    camera.position.set(-12, 11, 12)
+    camera.position.set(-12 + roomViewOffset, 11, 12 + roomViewOffset)
     camera.zoom = 1
     camera.updateProjectionMatrix()
-    controls.target.set(0.2, 1.25, -0.15)
+    controls.target.set(0.2 + roomViewOffset, 1.25, -0.15 + roomViewOffset)
     controls.update()
+    centerRoomInView()
     controls.enableDamping = true
     render()
   }
@@ -1009,16 +1077,20 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     resetView,
     setTheme,
     setNightMode,
+    setWorking(working) {
+      isWorking = working
+      man.update(performance.now() / 1000, isWorking)
+    },
     storeFoodItem(product) {
       const stored = kitchen.storeFoodItem(product)
-      if (stored) man.update(performance.now() / 1000)
+      if (stored) man.update(performance.now() / 1000, isWorking)
       return stored
     },
     feedCharacter(foodId) {
       const eatenFood = kitchen.takeFoodItem(foodId)
       if (!eatenFood) return null
       man.feed()
-      man.update(performance.now() / 1000)
+      man.update(performance.now() / 1000, isWorking)
       return eatenFood
     },
     getFoodItems: kitchen.getFoodItems,
