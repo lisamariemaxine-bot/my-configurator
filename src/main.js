@@ -217,9 +217,13 @@ document.querySelector('#app').innerHTML = `
     <div class="feed-products" role="list"></div>
   </aside>
   <button class="tutorial-toggle" type="button" aria-label="Uitleg opnieuw bekijken" title="Uitleg">?</button>
-  <button class="view-reset" type="button" aria-label="Terug naar het hele huis" title="Terug naar het hele huis">
-    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M5 1h2v1h1v1h1v1h1v1h1v1H1V5h1V4h1V3h1V2h1z"/><path fill="#fff" d="M2 6h8v5H2z"/><path fill="#426B83" d="M5 8h2v3H5z"/></svg>
+  <button class="house-reset" type="button" aria-label="Alle kleuren en meubels terugzetten naar standaard" title="Alles terugzetten">
+    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 1h4v1h1v1h1v2H8V4H7V3H5v1H4v1H3v2h1v1h1v1h2V8h1V7h2v2H9v1H8v1H4v-1H3V9H2V8H1V4h1V3h1V2h1zM0 2h3v3H0z"/></svg>
   </button>
+  <button class="house-photo" type="button" aria-label="Maak een foto van je huis" title="Foto maken">
+    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 2h4v1h3v8H1V3h3zM5 5v1H4v2h1v1h2V8h1V6H7V5z"/><path fill="#426B83" d="M5 5h2v1h1v2H7v1H5V8H4V6h1z"/><path fill="#fff" d="M9 4h1v1H9z"/></svg>
+  </button>
+  <div class="photo-flash" aria-hidden="true"></div>
   <div class="intro" hidden>
     <section class="intro-bubble" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-text">
       <p class="intro-step-count" aria-live="polite"></p>
@@ -365,13 +369,13 @@ characterHotspot.addEventListener('click', () => {
 })
 
 const floorButtons = [...document.querySelectorAll('.floor-arrow')]
-floorButtons.forEach(button => button.addEventListener('click', () => {
+function goToFloor(floor) {
   if (!room) return
-  const floor = Number(button.dataset.floor)
   room.setFloor(floor)
-  floorButtons.forEach(option => option.setAttribute('aria-pressed', String(option === button)))
+  floorButtons.forEach(option => option.setAttribute('aria-pressed', String(Number(option.dataset.floor) === floor)))
   document.querySelector('#room-scene').setAttribute('aria-label', floor === 1 ? 'Bovenverdieping' : 'Benedenverdieping: woonkamer')
-}))
+}
+floorButtons.forEach(button => button.addEventListener('click', () => goToFloor(Number(button.dataset.floor))))
 
 const floorVisibilityToggle = document.querySelector('.floor-visibility-toggle')
 floorVisibilityToggle.addEventListener('click', () => {
@@ -1161,34 +1165,30 @@ const tutorialSteps = [
   },
   {
     title: 'Rondkijken',
-    text: 'Sleep met je muis over het huis om het rond te draaien. Scroll om in en uit te zoomen. Verdwaald? Met het huisje-knopje linksboven zie je weer het hele huis.',
-    highlight: ['.view-reset'],
+    text: 'Sleep met je muis over het huis om het rond te draaien. Scroll om in en uit te zoomen.',
   },
   {
-    title: 'Kleuren aanpassen',
-    text: 'Klik op de sofa, het bureau of de keuken. Je kiest telkens uit drie totaal verschillende modellen en past de kleuren aan. Je ziet elke aanpassing meteen.',
+    title: 'Interieur aanpassen',
+    text: 'Beweeg met je muis over de meubels: wat wit oplicht, kun je aanpassen. Beneden zijn dat de sofa, het bureau en de keuken, boven het bed, de douche en de make-uptafel. Klik erop en kies uit drie totaal verschillende modellen en je eigen kleuren.',
     furniture: ['sofa', 'desk', 'kitchen'],
     action: ['Probeer het nu', () => openSofaCustomizer()],
-  },
-  {
-    title: 'Stijl kiezen',
-    text: 'Elk meubel heeft drie stijlen: Klassiek, Roze en Kleurrijk. Kies een stijl in de winkel en klik op "Bekijk in kamer" om het resultaat in je huis te zien.',
-    action: ['Bekijk de stijlen', () => setShopOpen(true)],
   },
   {
     title: 'Verdiepingen',
     text: 'Met de pijltjes ga je naar boven of naar beneden. Met het oogje toon of verberg je de doorzichtige verdieping.',
     highlight: ['.floor-arrow', '.floor-visibility-toggle'],
+    // Laat de bovenverdieping even zien en ga daarna vanzelf terug naar beneden
+    floorDemo: true,
   },
   {
     title: 'Dag en nacht',
-    text: 'Klik op de zon of de maan om te kiezen of het dag of nacht is in je huis.',
+    text: 'Klik op de zon of de maan om te kiezen of het buiten dag of nacht is. \'s Nachts gaan de lampjes binnen aan en twinkelen de sterren boven je huisje.',
     highlight: ['.night-toggle'],
   },
   {
     title: 'Veel plezier!',
-    text: 'Dat was het! Met het vraagteken linksboven bekijk je deze uitleg opnieuw.',
-    highlight: ['.tutorial-toggle'],
+    text: 'Dat was het! Linksboven bekijk je deze uitleg opnieuw (?), zet je alles terug naar standaard (pijltje) of maak je een foto van je huis (camera).',
+    highlight: ['.tutorial-toggle', '.house-reset', '.house-photo'],
   },
 ]
 let tutorialStep = 0
@@ -1199,10 +1199,43 @@ function clearTutorialHighlights() {
   room?.highlightFurniture(null)
 }
 
+// Rondleiding naar boven in de stap 'Verdiepingen': even naar verdieping 2, dan terug naar beneden
+let floorDemoTimers = []
+let floorDemoZoom = null
+function stopFloorDemo() {
+  const wasRunning = floorDemoTimers.length > 0
+  floorDemoTimers.forEach(timer => window.clearTimeout(timer))
+  floorDemoTimers = []
+  if (wasRunning) goToFloor(0)
+  if (floorDemoZoom) room?.zoomTo(floorDemoZoom)
+  floorDemoZoom = null
+}
+function startFloorDemo() {
+  stopFloorDemo()
+  floorDemoTimers = [
+    window.setTimeout(() => goToFloor(1), 700),
+    // Boven aangekomen: even inzoomen op de slaapkamer, daarna rustig terug uitzoomen
+    window.setTimeout(() => {
+      floorDemoZoom = room?.getCameraState().zoom ?? null
+      if (floorDemoZoom) room.zoomTo(floorDemoZoom * 1.45)
+    }, 1700),
+    window.setTimeout(() => {
+      if (floorDemoZoom) room.zoomTo(floorDemoZoom)
+      floorDemoZoom = null
+    }, 4200),
+    window.setTimeout(() => {
+      floorDemoTimers = []
+      goToFloor(0)
+    }, 5000),
+  ]
+}
+
 function showTutorialStep(index) {
   tutorialStep = clamp(index, 0, tutorialSteps.length - 1)
   const step = tutorialSteps[tutorialStep]
   clearTutorialHighlights()
+  stopFloorDemo()
+  if (step.floorDemo) startFloorDemo()
   introStepCount.textContent = `${tutorialStep + 1} / ${tutorialSteps.length}`
   introTitle.textContent = step.title
   introText.textContent = step.text
@@ -1237,6 +1270,7 @@ function showIntro(step) {
 
 function hideIntro() {
   clearTutorialHighlights()
+  stopFloorDemo()
   intro.hidden = true
   document.body.classList.remove('is-intro')
   room?.setViewShift({}, reduceMotion)
@@ -1294,12 +1328,81 @@ introAction.addEventListener('click', () => {
   }, 450)
 })
 tutorialToggle.addEventListener('click', openTutorial)
-// Terug naar het hele huis: panelen sluiten en de camera terugzetten (handig als je te ver ingezoomd bent)
-document.querySelector('.view-reset').addEventListener('click', () => {
+
+// Reset: alle kleuren, modellen, de kussenvorm en de stijlen terug naar standaard (ook in localStorage)
+function resetHouse() {
+  if (!window.confirm('Wil je alle kleuren en meubels terugzetten naar de standaard?')) return
   closeSofaCustomizer()
   closeFurnitureCustomizer()
-  room?.resetView()
-})
+  setShopOpen(false)
+  const touched = new Set(['sofa', ...Object.keys(customFurnitureColors), ...Object.keys(selectedFurnitureStyles)])
+  customFurnitureColors = {}
+  selectedFurnitureStyles = {}
+  selectedFurnitureModels = {}
+  selectedSofaModel = 'modern'
+  selectedSofaCushionShape = 'rounded'
+  for (const key of [FURNITURE_COLOR_STORAGE_KEY, FURNITURE_STYLE_STORAGE_KEY, FURNITURE_MODEL_STORAGE_KEY, SOFA_MODEL_STORAGE_KEY, SOFA_CUSHION_SHAPE_STORAGE_KEY]) {
+    try {
+      localStorage.removeItem(key)
+    } catch (error) {
+      console.warn('Opslag kon niet worden gewist.', error)
+    }
+  }
+  if (!room) return
+  touched.forEach(group => room.setTheme(group, 'original'))
+  room.setSofaModel('modern')
+  room.setSofaCushionShape('rounded')
+  for (const [item, config] of Object.entries(furnitureCustomizers)) {
+    room.setTheme(item, 'original')
+    if (config.models) room.setFurnitureModel(item, config.models[0].key)
+  }
+}
+document.querySelector('.house-reset').addEventListener('click', resetHouse)
+
+// Foto: het huis als PNG downloaden, met de dag- of nachtachtergrond en de sterren erbij
+function takeHousePhoto() {
+  const scene = document.querySelector('#room-scene')
+  const isNight = document.body.classList.contains('is-night')
+  const url = room?.takeScreenshot((context, width, height) => {
+    context.fillStyle = isNight ? '#101A2A' : '#FFFFFF'
+    context.fillRect(0, 0, width, height)
+    if (!isNight) return
+    const bounds = scene.getBoundingClientRect()
+    const scale = width / bounds.width
+    nightStars.querySelectorAll('i').forEach(star => {
+      const rect = star.getBoundingClientRect()
+      context.fillStyle = getComputedStyle(star).backgroundColor
+      context.fillRect(Math.round((rect.left - bounds.left) * scale), Math.round((rect.top - bounds.top) * scale), Math.ceil(rect.width * scale), Math.ceil(rect.height * scale))
+    })
+  })
+  if (!url) return
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
+  const link = Object.assign(document.createElement('a'), { href: url, download: `pixel-home-${stamp}.png` })
+  document.body.append(link)
+  link.click()
+  link.remove()
+  document.body.classList.remove('is-photo-flash')
+  void document.body.offsetWidth
+  document.body.classList.add('is-photo-flash')
+}
+document.querySelector('.house-photo').addEventListener('click', takeHousePhoto)
+
+// Zoomen mag alleen het huis doen, nooit de pagina (bv. knijpen op het trackpad boven de tekstballon).
+// Knijpen = een wheel-event met ctrlKey: dat blokkeren we en sturen we door naar het canvas van het huis.
+document.addEventListener('wheel', event => {
+  if (!event.ctrlKey) return
+  event.preventDefault()
+  const canvas = document.querySelector('#room-scene canvas')
+  if (!canvas || event.target === canvas) return
+  canvas.dispatchEvent(new WheelEvent('wheel', {
+    deltaX: event.deltaX, deltaY: event.deltaY, deltaMode: event.deltaMode, ctrlKey: true,
+    clientX: event.clientX, clientY: event.clientY, bubbles: true, cancelable: true,
+  }))
+}, { passive: false })
+// Safari (Mac/iPhone) gebruikt eigen gesture-events voor knijpzoom van de pagina
+for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+  document.addEventListener(type, event => event.preventDefault(), { passive: false })
+}
 document.addEventListener('keydown', event => {
   if (intro.hidden) return
   if (event.key === 'Escape') closeTutorial()

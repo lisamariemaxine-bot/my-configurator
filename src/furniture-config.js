@@ -134,5 +134,47 @@ export const furnitureCustomizers = {
         parts: [['kitchenRetro', 'Kleur kastjes en koelkast'], ['kitchenRetroTop', 'Kleur werkblad en deurtjes'], ['kitchenRetroAccent', 'Kleur accenten']] },
     ],
   },
+  bed: {
+    title: 'Bed aanpassen',
+    models: [
+      { key: 'cozy', label: 'Gezellig',
+        icon: '<rect x="1" y="3" width="2" height="10" fill="#502E1C"/><rect x="3" y="4" width="1" height="5" fill="#502E1C"/><rect x="5" y="4" width="1" height="5" fill="#502E1C"/><rect x="3" y="6" width="5" height="2" fill="#B7A1D9"/><rect x="3" y="8" width="12" height="3" fill="#FFFFFF"/><rect x="7" y="7" width="8" height="3" fill="#72BDB5"/><rect x="3" y="11" width="12" height="2" fill="#502E1C"/><rect x="14" y="11" width="1" height="3" fill="#502E1C"/><rect x="1" y="13" width="1" height="1" fill="#502E1C"/>',
+        parts: [['bedFrame', 'Kleur bedframe'], ['bedCover', 'Kleur dekbed'], ['bedPillow', 'Kleur kussens']] },
+      { key: 'canopy', label: 'Hemelbed',
+        icon: '<rect x="1" y="1" width="1" height="13" fill="#D9C7AE"/><rect x="14" y="1" width="1" height="13" fill="#D9C7AE"/><rect x="1" y="1" width="14" height="1" fill="#D9C7AE"/><rect x="2" y="2" width="12" height="2" fill="#FFFFFF"/><rect x="2" y="2" width="2" height="9" fill="#FFFFFF"/><rect x="12" y="2" width="2" height="9" fill="#FFFFFF"/><rect x="4" y="7" width="3" height="2" fill="#FFFFFF"/><rect x="2" y="9" width="12" height="2" fill="#F4EBDD"/><rect x="6" y="8" width="8" height="3" fill="#E9A8B8"/><rect x="2" y="11" width="12" height="2" fill="#E9A8B8"/>',
+        parts: [['bedCanopyFrame', 'Kleur palen en frame'], ['bedCanopyCover', 'Kleur dekbed'], ['bedCanopyCurtain', 'Kleur voile']] },
+      { key: 'scandi', label: 'Scandi',
+        icon: '<rect x="1" y="3" width="4" height="9" fill="#C9B79C"/><rect x="2" y="2" width="2" height="1" fill="#C9B79C"/><rect x="2" y="4" width="1" height="7" fill="#D9894F"/><rect x="5" y="7" width="3" height="2" fill="#FFFFFF"/><rect x="5" y="9" width="10" height="2" fill="#F2EDE4"/><rect x="11" y="8" width="3" height="3" fill="#D9894F"/><rect x="1" y="11" width="14" height="2" fill="#C9B79C"/><rect x="2" y="13" width="1" height="1" fill="#502E1C"/><rect x="13" y="13" width="1" height="1" fill="#502E1C"/>',
+        parts: [['bedScandiFrame', 'Kleur hoofdbord en frame'], ['bedScandiCover', 'Kleur dekbed'], ['bedScandiThrow', 'Kleur plaid']] },
+    ],
+  },
+  shower: {
+    title: 'Douche aanpassen',
+    models: [
+      { key: 'glass', label: 'Glas',
+        icon: '<rect x="2" y="1" width="12" height="13" fill="#EEF4F6"/><rect x="2" y="1" width="12" height="1" fill="#C9CED3"/><rect x="3" y="2" width="3" height="3" fill="#FFFFFF"/><rect x="7" y="2" width="3" height="3" fill="#FFFFFF"/><rect x="3" y="6" width="3" height="3" fill="#FFFFFF"/><rect x="11" y="2" width="1" height="5" fill="#414242"/><rect x="9" y="3" width="3" height="1" fill="#414242"/><rect x="2" y="1" width="1" height="13" fill="#C9CED3"/><rect x="13" y="1" width="1" height="13" fill="#C9CED3"/><rect x="1" y="13" width="14" height="2" fill="#FFFFFF"/>',
+        parts: [['showerTile', 'Kleur tegels'], ['showerFrame', 'Kleur frame'], ['showerFixture', 'Kleur kraan']] },
+      { key: 'tub', label: 'Bad',
+        icon: '<rect x="2" y="1" width="12" height="1" fill="#414242"/><rect x="2" y="2" width="5" height="7" fill="#9FD3C7"/><rect x="3" y="2" width="1" height="7" fill="#7FBFB5"/><rect x="5" y="2" width="1" height="7" fill="#7FBFB5"/><rect x="11" y="2" width="1" height="5" fill="#414242"/><rect x="1" y="8" width="14" height="4" fill="#F4EBDD"/><rect x="2" y="9" width="12" height="1" fill="#FFFFFF"/><rect x="2" y="12" width="2" height="2" fill="#414242"/><rect x="12" y="12" width="2" height="2" fill="#414242"/>',
+        parts: [['showerTub', 'Kleur bad'], ['showerCurtain', 'Kleur gordijn'], ['showerFixture', 'Kleur kranen en pootjes']] },
+      { key: 'rain', label: 'Inloop',
+        icon: '<rect x="2" y="1" width="12" height="12" fill="#6E9C84"/><rect x="5" y="2" width="1" height="11" fill="#5A8570"/><rect x="9" y="2" width="1" height="11" fill="#5A8570"/><rect x="2" y="5" width="12" height="1" fill="#5A8570"/><rect x="2" y="9" width="12" height="1" fill="#5A8570"/><rect x="5" y="2" width="5" height="1" fill="#2B2B36"/><rect x="1" y="1" width="1" height="13" fill="#2B2B36"/><rect x="14" y="1" width="1" height="13" fill="#2B2B36"/><rect x="1" y="13" width="14" height="2" fill="#A0714F"/><rect x="4" y="13" width="1" height="2" fill="#7E5639"/><rect x="8" y="13" width="1" height="2" fill="#7E5639"/><rect x="12" y="13" width="1" height="2" fill="#7E5639"/>',
+        parts: [['showerRainTile', 'Kleur tegels'], ['showerRainFrame', 'Kleur frame'], ['showerWood', 'Kleur hout']] },
+    ],
+  },
+  dresser: {
+    title: 'Make-uptafel aanpassen',
+    models: [
+      { key: 'classic', label: 'Klassiek',
+        icon: '<rect x="9" y="1" width="4" height="6" fill="#502E1C"/><rect x="10" y="2" width="2" height="4" fill="#94CAE2"/><rect x="1" y="7" width="14" height="1" fill="#E4D2BA"/><rect x="2" y="8" width="12" height="6" fill="#502E1C"/><rect x="3" y="9" width="10" height="1" fill="#6B4430"/><rect x="3" y="11" width="10" height="1" fill="#6B4430"/><rect x="5" y="9" width="1" height="1" fill="#A69060"/><rect x="10" y="9" width="1" height="1" fill="#A69060"/><rect x="5" y="11" width="1" height="1" fill="#A69060"/><rect x="10" y="11" width="1" height="1" fill="#A69060"/><rect x="3" y="5" width="1" height="2" fill="#D77C9E"/><rect x="5" y="4" width="1" height="3" fill="#94CAE2"/>',
+        parts: [['dresserBody', 'Kleur kast'], ['dresserTop', 'Kleur blad'], ['dresserHandle', 'Kleur knopjes']] },
+      { key: 'hollywood', label: 'Hollywood',
+        icon: '<rect x="3" y="1" width="10" height="7" fill="#F6E1E6"/><rect x="5" y="2" width="6" height="5" fill="#94CAE2"/><rect x="3" y="1" width="1" height="1" fill="#FFE0A3"/><rect x="6" y="1" width="1" height="1" fill="#FFE0A3"/><rect x="9" y="1" width="1" height="1" fill="#FFE0A3"/><rect x="12" y="1" width="1" height="1" fill="#FFE0A3"/><rect x="3" y="4" width="1" height="1" fill="#FFE0A3"/><rect x="12" y="4" width="1" height="1" fill="#FFE0A3"/><rect x="1" y="8" width="14" height="1" fill="#FFFFFF"/><rect x="2" y="9" width="12" height="2" fill="#F6E1E6"/><rect x="3" y="11" width="1" height="4" fill="#D6A84A"/><rect x="12" y="11" width="1" height="4" fill="#D6A84A"/>',
+        parts: [['dresserHollywood', 'Kleur tafel en spiegel'], ['dresserHollywoodTop', 'Kleur blad'], ['dresserHollywoodFrame', 'Kleur goud']] },
+      { key: 'boho', label: 'Boho',
+        icon: '<rect x="5" y="1" width="6" height="1" fill="#8A5A3B"/><rect x="4" y="2" width="8" height="5" fill="#8A5A3B"/><rect x="5" y="2" width="6" height="5" fill="#94CAE2"/><rect x="1" y="7" width="14" height="1" fill="#C8A27A"/><rect x="2" y="8" width="12" height="6" fill="#C8A27A"/><rect x="3" y="9" width="4" height="4" fill="#E9D8B4"/><rect x="9" y="9" width="4" height="4" fill="#E9D8B4"/><rect x="4" y="10" width="2" height="2" fill="#C8A27A"/><rect x="10" y="10" width="2" height="2" fill="#C8A27A"/><rect x="13" y="4" width="2" height="3" fill="#54794D"/>',
+        parts: [['dresserBoho', 'Kleur kast'], ['dresserBohoTop', 'Kleur rotan'], ['dresserBohoMirror', 'Kleur spiegelrand']] },
+    ],
+  },
 }
 

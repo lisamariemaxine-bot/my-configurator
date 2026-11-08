@@ -3,11 +3,11 @@ import { furnitureCustomizers, sofaModels, furnitureStyles, shopItems } from '..
 import { PALETTE } from '../../src/palette.js'
 
 describe('aanpasbare meubels', () => {
-  it('heeft bureau en keuken (de muur is bewust niet aanpasbaar)', () => {
-    expect(Object.keys(furnitureCustomizers)).toEqual(['desk', 'kitchen'])
+  it('heeft bureau, keuken, bed, douche en make-uptafel (de muur is bewust niet aanpasbaar)', () => {
+    expect(Object.keys(furnitureCustomizers)).toEqual(['desk', 'kitchen', 'bed', 'shower', 'dresser'])
   })
 
-  it.each(['desk', 'kitchen'])('%s heeft drie verschillende modellen met icoon en kleurkiezers', item => {
+  it.each(['desk', 'kitchen', 'bed', 'shower', 'dresser'])('%s heeft drie verschillende modellen met icoon en kleurkiezers', item => {
     const { models } = furnitureCustomizers[item]
     expect(models).toHaveLength(3)
     expect(new Set(models.map(model => model.key)).size).toBe(3)

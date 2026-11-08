@@ -26,6 +26,10 @@ Dit project is gebouwd met **Claude Code** (in VS Code) als programmeerpartner. 
 | 10 | "Bureau en keuken ook aanpassen", "muur ook", "3 totaal verschillende sofa's met icoontjes" | Generiek aanpaspaneel, eigen paletsleutels, 3 sofamodellen | Klikken op de tv opende de muur (zie debugging 4). |
 | 11 | "Bureau en keuken andere stijlen, niet glitchen met het mannetje, stoel hoort bij bureau" | 3 bureausets en 3 keukens, bureau en stoel als set | Elk bureau van opzij gecontroleerd terwijl het mannetje typt. |
 | 13 | "Vakjes van het aanpassen ook pixelated; mijn site is ingezoomd en ik geraak niet weg" | Panelen met pixelrand; camerabug gevonden en opgelost | Eerst nagebootst in plaats van gegokt, daarna een test die de bug vastlegt |
+| 17 | "Hemelbed glitcht bij kleur aanpassen, lampschaduw weg, plaid kleurt hoofdbord mee, reset- en fotoknop" | Overlappende delen losgemaakt, eigen naadkleur, `noShadow`-vlag, reset met bevestiging, foto als PNG | Eerst met felle testkleuren nagebootst om de echte oorzaak te zien |
+| 16 | "Stoel bij Hollywood, gordijn niet doorkijkbaar, alles smooth, inzoomen bij verdiepingen, stijl kiezen weg" | Krukje naast de tafel (vóór de spiegel staat het mannetje), dicht doek achter de plooien, vloeiend zoomen, zoom in de rondleiding, stap verwijderd | Krukje bewust opzij gezet zodat het niet door het mannetje steekt |
+| 15 | "Bed, douche en make-upkast ook aanpasbaar, met hover" | 3 modellen per meubel in bedroom.js; algemene klik/hover per verdieping | Getest dat het mannetje (slapen, douchen, opmaken) op dezelfde plek blijft passen |
+| 14 | "Haal het huisje-idee weg, noem 3/7 interieur aanpassen met uitleg over hover, laat 5/7 vanzelf naar boven gaan, 6/7 gaat over buiten" | Knop verwijderd, teksten herschreven, automatische rondleiding naar verdieping 2 | Een extra knop die de AI zelf bedacht was niet gevraagd: kritisch teruggedraaid. De camerafix bleef wel. |
 | 12 | "Altijd eerst dag, sterren 's nachts, muur niet meer aanpasbaar, tijdens de tut wordt het afgesneden bij inzoomen, reling boven ontbreekt" | Dagmodus los van het uur, pixelsterren, de muur uit de klikbare meubels, tutorial-layout via de camera, extra reling | Ik heb de muur bewust teruggeschroefd: minder is hier beter. |
 
 ### Wat ik leerde over prompts
@@ -51,8 +55,13 @@ Dit project is gebouwd met **Claude Code** (in VS Code) als programmeerpartner. 
 | 11 | Eigen unit-test faalde ("icoon bevat `<rect`") | Fout in de **test**: sommige icoontjes gebruiken `<path>` | Test aangepast, niet de code | `npm test` |
 | 12 | Huis afgesneden bij inzoomen tijdens de tutorial | Het canvas werd met CSS `scale(0.8)` verkleind, dus bij inzoomen zag je de rand van het canvas | Verschuiven/verkleinen via `camera.setViewOffset`, zodat het canvas altijd schermvullend is | e2e: *canvas vult het hele scherm* |
 | 13 | Alle browsertests liepen vast (time-out) | `waitForFunction` wacht standaard per animatieframe, en met WebGL in software komen er bijna geen frames | `polling: 250` | `npm run test:e2e` |
-| 15 | "Mijn website is ingezoomd en ik geraak niet weg" | Bij wisselen van meubel terwijl de camera nog terugzoomde, werd het half ingezoomde beeld als terugkeerpunt bewaard | Het terugkeerpunt van de lopende terugzoom hergebruiken, zoomgrenzen instellen en een huisjesknop toevoegen | e2e: *je zit niet vast ingezoomd* en *huisjesknop* |
+| 15 | "Mijn website is ingezoomd en ik geraak niet weg" | Bij wisselen van meubel terwijl de camera nog terugzoomde, werd het half ingezoomde beeld als terugkeerpunt bewaard | Het terugkeerpunt van de lopende terugzoom hergebruiken en zoomgrenzen instellen | e2e: *je zit niet vast ingezoomd* |
 | 16 | Browsertests liepen nog steeds vast, ook na de polling-fix | Elke klik wacht op een getekend frame; SwiftShader haalde 2 fps | Gemeten: met de echte GPU 47–50 fps, dus de SwiftShader-vlag verwijderd | 38/38 e2e geslaagd in 4,7 min |
+| 17 | Oplichtende rand van het bed zou op de benedenverdieping staan | De outline-kopie werd in `room` gehangen; bed zit in de bovenverdieping (5,2 hoger) | Kopie naast het origineel hangen (`target.group.parent`) | Screenshot met hover boven |
+| 18 | Test: klik op de douche opende niets | Het klikpunt lag op de hanglamp vóór de douche: correct gedrag, slechte test | Test mikt op de douchevloer | e2e |
+| 19 | Test van de zoomrondleiding faalde | De test las de beginzoom terwijl de ingroei-animatie bij het laden nog liep | Test laat de animatie eerst afronden; het gedrag zelf was correct | e2e |
+| 20 | Oude kleur flikkerde door bij het hemelbed | Delen zaten in elkaar (strook in de lijst, ring half in het gordijn, frame tussen de ruches): z-fighting | Delen losgemaakt en een dicht doek achter de ruches | Screenshot met felle kleuren |
+| 21 | Lampen boven bleven schaduw werpen, ook na `castShadow = false` | De vervaagcode van de bovenverdieping zet `castShadow` elke frame terug aan | Vlag `userData.noShadow` die die code respecteert | Screenshot |
 | 14 | Een rand van het trapgat boven had geen reling | Alleen de lange kant en het bordes hadden balusters | Reling langs de open linkerrand | Screenshot |
 
 ## Kritische noot

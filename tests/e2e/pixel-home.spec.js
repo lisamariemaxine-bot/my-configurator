@@ -44,29 +44,54 @@ test.describe('laden en tutorial', () => {
     await openApp(page)
     await expect(page.locator('.intro-bubble')).toBeVisible()
     await expect(page.locator('#intro-title')).toHaveText('Welkom!')
-    await expect(page.locator('.intro-step-count')).toHaveText('1 / 7')
+    await expect(page.locator('.intro-step-count')).toHaveText('1 / 6')
     expect(errors).toEqual([])
   })
 
   test('door alle stappen bladeren, terug, en afsluiten', async ({ page }) => {
     await openApp(page)
     await expect(page.locator('.intro-previous')).toBeDisabled()
-    for (let step = 2; step <= 7; step++) {
+    for (let step = 2; step <= 6; step++) {
       await page.locator('.intro-next').click()
-      await expect(page.locator('.intro-step-count')).toHaveText(`${step} / 7`)
+      await expect(page.locator('.intro-step-count')).toHaveText(`${step} / 6`)
     }
     await expect(page.locator('.intro-next')).toHaveText('Starten')
     await page.locator('.intro-previous').click()
-    await expect(page.locator('.intro-step-count')).toHaveText('6 / 7')
+    await expect(page.locator('.intro-step-count')).toHaveText('5 / 6')
     await page.keyboard.press('Escape')
     await expect(page.locator('.intro')).toBeHidden()
+  })
+
+  test('stap 3 heet Interieur aanpassen; stap 4 gaat even naar boven, zoomt in en weer terug', async ({ page }) => {
+    await openApp(page)
+    await page.waitForTimeout(2000) // ingroei-animatie bij het laden laten afronden
+    await page.locator('.intro-next').click()
+    await page.locator('.intro-next').click()
+    await expect(page.locator('#intro-title')).toHaveText('Interieur aanpassen')
+    await page.locator('.intro-next').click()
+    await expect(page.locator('#intro-title')).toHaveText('Verdiepingen')
+    const startZoom = (await room(page).camera()).zoom
+    await expect.poll(async () => (await room(page).camera()).activeFloor, { timeout: 4000 }).toBe(1)
+    await expect.poll(async () => (await room(page).camera()).zoom, { timeout: 4000 }).toBeGreaterThan(startZoom * 1.3)
+    await expect.poll(async () => (await room(page).camera()).activeFloor, { timeout: 8000 }).toBe(0)
+    await expect.poll(async () => (await room(page).camera()).zoom, { timeout: 4000 }).toBeCloseTo(startZoom, 2)
+  })
+
+  test('de stap Stijl kiezen bestaat niet meer', async ({ page }) => {
+    await openApp(page)
+    const titles = []
+    for (let step = 1; step <= 6; step++) {
+      titles.push(await page.locator('#intro-title').textContent())
+      if (step < 6) await page.locator('.intro-next').click()
+    }
+    expect(titles).toEqual(['Welkom!', 'Rondkijken', 'Interieur aanpassen', 'Verdiepingen', 'Dag en nacht', 'Veel plezier!'])
   })
 
   test('de tutorial komt bij elke refresh terug en het ?-knopje opent hem opnieuw', async ({ page }) => {
     await openApp(page)
     await skipTutorial(page)
     await page.locator('.tutorial-toggle').click()
-    await expect(page.locator('.intro-step-count')).toHaveText('1 / 7')
+    await expect(page.locator('.intro-step-count')).toHaveText('1 / 6')
     await page.reload()
     await expect(page.locator('.intro-bubble')).toBeVisible()
   })
@@ -95,8 +120,13 @@ test.describe('draaien en zoomen', () => {
     const box = await page.locator('#room-scene canvas').boundingBox()
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     await page.mouse.wheel(0, -600)
+    // Vloeiend: kort na het scrollen is de zoom nog onderweg, daarna verder ingezoomd
+    await page.waitForTimeout(60)
+    const halfway = (await room(page).camera()).zoom
     await page.waitForTimeout(800)
-    expect((await room(page).camera()).zoom).toBeGreaterThan(before.zoom)
+    const end = (await room(page).camera()).zoom
+    expect(halfway).toBeGreaterThan(before.zoom)
+    expect(end).toBeGreaterThan(halfway)
   })
 })
 
@@ -132,6 +162,33 @@ test.describe('configureren', () => {
     expect(stored).toEqual({ desk: 'gaming' })
   })
 
+  test('boven: bed, douche en make-uptafel openen met een klik en wisselen van model', async ({ page }) => {
+    await openApp(page)
+    await skipTutorial(page)
+    await page.locator('.floor-arrow[data-floor="1"]').click()
+    await expect.poll(async () => (await room(page).camera()).activeFloor).toBe(1)
+    await page.waitForTimeout(1200)
+    // Klikpunten op een zichtbaar stuk: het midden van de douche ligt achter de hanglamp
+    for (const [point, title, model] of [[[-0.9, 6.0, -2.0], 'Bed aanpassen', 'Hemelbed'], [[4.3, 5.35, -3.0], 'Douche aanpassen', 'Bad'], [[3.75, 5.8, -0.1], 'Make-uptafel aanpassen', 'Hollywood']]) {
+      await clickAt(page, await room(page).project(point))
+      await expect(page.locator('#furniture-customizer-title')).toHaveText(title)
+      await page.locator('.furniture-customizer-models button', { hasText: model }).click()
+      await expect(page.locator('.furniture-customizer-models button', { hasText: model })).toHaveAttribute('aria-pressed', 'true')
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(1300)
+    }
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('pixel-home-furniture-models')))
+    expect(stored).toEqual({ bed: 'canopy', shower: 'tub', dresser: 'hollywood' })
+  })
+
+  test('beneden kan je niet op het bed klikken (andere verdieping)', async ({ page }) => {
+    await openApp(page)
+    await skipTutorial(page)
+    await page.evaluate(() => document.querySelector('.floor-visibility-toggle').click())
+    await clickAt(page, await room(page).point('bed'))
+    await expect(page.locator('#furniture-customizer-title')).not.toHaveText('Bed aanpassen')
+  })
+
   test('keuken: model wisselen en kleur aanpassen', async ({ page }) => {
     await openApp(page)
     await skipTutorial(page)
@@ -147,6 +204,23 @@ test.describe('configureren', () => {
 })
 
 test.describe('camera', () => {
+  test('knijpzoom boven de tekstballon zoomt het huis, niet de pagina', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'trackpad-knijpen bestaat enkel op desktop')
+    await openApp(page)
+    await expect(page.locator('.intro-bubble')).toBeVisible()
+    await page.waitForTimeout(1500)
+    const before = await room(page).camera()
+    const bubble = await page.locator('.intro-bubble').boundingBox()
+    const notPrevented = await page.evaluate(({ x, y }) => {
+      const target = document.elementFromPoint(x, y)
+      const event = new WheelEvent('wheel', { deltaY: -40, ctrlKey: true, clientX: x, clientY: y, bubbles: true, cancelable: true })
+      return target.dispatchEvent(event)
+    }, { x: bubble.x + bubble.width / 2, y: bubble.y + 30 })
+    expect(notPrevented).toBe(false)
+    await page.waitForTimeout(600)
+    expect((await room(page).camera()).zoom).toBeGreaterThan(before.zoom)
+  })
+
   test('van het ene meubel naar het andere en sluiten: je zit niet vast ingezoomd', async ({ page }) => {
     await openApp(page)
     await skipTutorial(page)
@@ -162,22 +236,48 @@ test.describe('camera', () => {
     expect(end.zoom).toBeCloseTo(start.zoom, 2)
     end.position.forEach((value, index) => expect(value).toBeCloseTo(start.position[index], 1))
   })
+})
 
-  test('de huisjesknop brengt je terug naar het hele huis', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'inzoomen met het muiswiel')
+test.describe('reset en foto', () => {
+  test('reset zet alle kleuren en meubels terug naar standaard', async ({ page }) => {
     await openApp(page)
     await skipTutorial(page)
-    const start = await room(page).camera()
-    const box = await page.locator('#room-scene canvas').boundingBox()
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-    for (let i = 0; i < 6; i++) await page.mouse.wheel(0, -800)
-    await page.waitForTimeout(800)
-    const zoomed = await room(page).camera()
-    expect(zoomed.zoom).toBeGreaterThan(start.zoom)
-    expect(zoomed.zoom).toBeLessThanOrEqual(6)
-    await page.locator('.view-reset').click()
-    await page.waitForTimeout(500)
-    expect((await room(page).camera()).zoom).toBeCloseTo(start.zoom, 2)
+    await page.evaluate(() => window.__pixelHome.openFurniture('desk'))
+    await page.locator('.furniture-customizer-models button', { hasText: 'Gaming' }).click()
+    await page.locator('.furniture-customizer-colors input').first().fill('#ff0000')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(1300)
+    page.once('dialog', dialog => dialog.accept())
+    await page.locator('.house-reset').click()
+    const stored = await page.evaluate(() => ['pixel-home-furniture-models', 'pixel-home-furniture-colors', 'pixel-home-sofa-model'].map(key => localStorage.getItem(key)))
+    expect(stored).toEqual([null, null, null])
+    await page.evaluate(() => window.__pixelHome.openFurniture('desk'))
+    await expect(page.locator('.furniture-customizer-models button', { hasText: 'Modern' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('.furniture-customizer-colors input').first()).not.toHaveValue('#ff0000')
+  })
+
+  test('reset annuleren laat alles staan', async ({ page }) => {
+    await openApp(page)
+    await skipTutorial(page)
+    await page.evaluate(() => window.__pixelHome.openFurniture('kitchen'))
+    await page.locator('.furniture-customizer-models button', { hasText: 'Retro' }).click()
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(1300)
+    page.once('dialog', dialog => dialog.dismiss())
+    await page.locator('.house-reset').click()
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('pixel-home-furniture-models')))).toEqual({ kitchen: 'retro' })
+  })
+
+  test('de fotoknop downloadt een PNG van het huis', async ({ page }) => {
+    await openApp(page)
+    await skipTutorial(page)
+    const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.house-photo').click()])
+    expect(download.suggestedFilename()).toMatch(/^pixel-home-.*\.png$/)
+    const path = await download.path()
+    const { readFileSync } = await import('node:fs')
+    const bytes = readFileSync(path)
+    expect(bytes.subarray(1, 4).toString()).toBe('PNG')
+    expect(bytes.length).toBeGreaterThan(20_000)
   })
 })
 

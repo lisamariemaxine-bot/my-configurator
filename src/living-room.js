@@ -1247,6 +1247,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     }
   }
 
+  let bedroomFurniture = null
   function createUpperFloor() {
     const upstairs = getThemeGroup('upperFloor')
     // The front-right opening leaves the entire staircase clear.
@@ -1276,7 +1277,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     box(0.035, 0.7, 0.035, 0.04, 5.55, 3.16, 'darkWood', upstairs)
     box(0.045, 0.045, 1.33, 0.04, 5.91, 3.8, 'darkWood', upstairs)
     box(0.18, 0.045, 0.045, 0.11, 5.91, 3.16, 'darkWood', upstairs)
-    createBedroom(upstairs, materials)
+    bedroomFurniture = createBedroom(upstairs, materials)
   }
 
   function createWallArt() {
@@ -1757,6 +1758,19 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   const man = createAnimatedMan()
   const ceilingBulb = createCeilingLamp()
   refineRoomObjects()
+  // Slaapkamermeubels (bed, douche, make-uptafel) zitten in de bovenverdieping-groep, zodat ze mee
+  // vervagen met de verdiepingen. Hier maken we ze aanpasbaar zoals de meubels beneden.
+  for (const [item, group] of Object.entries(bedroomFurniture?.groups ?? {})) {
+    themeGroups.set(item, group)
+    for (const child of group.children) {
+      if (!child.userData.modelOf) continue
+      if (!furnitureModels.has(item)) furnitureModels.set(item, new Set())
+      furnitureModels.get(item).add(child.userData.modelName)
+    }
+  }
+  setFurnitureModel('bed', 'cozy')
+  setFurnitureModel('shower', 'glass')
+  setFurnitureModel('dresser', 'classic')
 
   let activeFloor = 0
   let displayedFloorHeight = 0
@@ -1813,7 +1827,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     })
   }
 
-  const hoverTargets = ['sofa', 'kitchen', 'desk'].map(name => ({
+  const hoverTargets = ['sofa', 'kitchen', 'desk', 'bed', 'shower', 'dresser'].map(name => ({
     name,
     group: themeGroups.get(name),
     highlights: [],
@@ -1844,7 +1858,8 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       object.renderOrder = 2
     })
     highlight.visible = false
-    room.add(highlight)
+    // Naast het origineel hangen (ook binnen de bovenverdieping), zodat de rand op de juiste plek staat
+    ;(target.group.parent ?? room).add(highlight)
     target.highlights.push(highlight)
   }
   for (const target of hoverTargets) createHoverHighlight(target)
@@ -1889,7 +1904,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
         material.transparent = meshOpacity < 0.999
         material.depthWrite = meshOpacity > 0.5
         if (wasTransparent !== material.transparent) material.needsUpdate = true
-        mesh.castShadow = meshOpacity > 0.5
+        mesh.castShadow = meshOpacity > 0.5 && !mesh.userData.noShadow
       }
     }
   }
@@ -1939,22 +1954,9 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   const characterRaycaster = new THREE.Raycaster()
   const characterPointer = new THREE.Vector2()
   function updateFurnitureHover(event) {
-    const bounds = renderer.domElement.getBoundingClientRect()
-    characterPointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1
-    characterPointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1
-    characterRaycaster.setFromCamera(characterPointer, camera)
-    const intersections = characterRaycaster.intersectObjects(hoverTargets.map(target => target.group), true)
-    const firstHit = intersections.find(({ object }) => isShown(object))
-    let hitObject = firstHit?.object
-    while (hitObject && hitObject.parent !== room) hitObject = hitObject.parent
-    let hoveredTarget = hoverTargets.find(target => target.group === hitObject)
-    const wallSide = firstHit?.object.userData.wallSide
-    if (hoveredTarget?.name === 'walls'
-      && ((wallSide === 'back' && camera.position.z < -4.45)
-        || (wallSide === 'right' && camera.position.x > 4.92))) {
-      hoveredTarget = null
-    }
-    setFurnitureGlow(hoveredTarget ?? tutorialGlowTarget)
+    const name = pickFurniture(event)
+    const hoveredTarget = name ? hoverTargets.find(target => target.name === name) : null
+    setFurnitureGlow(hoveredTarget ?? tutorialGlowTarget ?? null)
   }
   function setFurnitureGlow(target) {
     const targets = Array.isArray(target) ? target : [target]
@@ -1974,10 +1976,11 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   }
   renderer.domElement.addEventListener('pointermove', updateFurnitureHover)
   renderer.domElement.addEventListener('pointerleave', clearFurnitureHover)
-  // Klik op een aanpasbaar meubel (sofa, bureau, keuken) opent zijn aanpaspaneel.
-  // We kijken naar het eerste zichtbare ding onder de muis, zodat bv. een klik op de tv
-  // niet de muur erachter opent. Slepen (draaien van de kamer) telt niet als klik.
-  const customizableFurniture = ['sofa', 'desk', 'kitchen']
+  // Klik op een aanpasbaar meubel opent zijn aanpaspaneel: beneden sofa, bureau en keuken, boven bed,
+  // douche en make-uptafel. We kijken naar het eerste zichtbare ding onder de muis (dus een klik op de tv
+  // opent niets), en enkel meubels van de verdieping waar je bent tellen. Slepen telt niet als klik.
+  const customizableFurniture = ['sofa', 'desk', 'kitchen', 'bed', 'shower', 'dresser']
+  const furnitureFloor = { bed: 1, shower: 1, dresser: 1 }
   const pointerDownAt = { x: 0, y: 0 }
   renderer.domElement.addEventListener('pointerdown', event => {
     pointerDownAt.x = event.clientX
@@ -1988,22 +1991,22 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     const opacity = object.material?.opacity ?? 1
     return opacity > 0.6
   }
-  function handleFurnitureClick(event) {
-    if (activeFloor !== 0) return
-    if (Math.hypot(event.clientX - pointerDownAt.x, event.clientY - pointerDownAt.y) > 6) return
+  function pickFurniture(event) {
     const bounds = renderer.domElement.getBoundingClientRect()
     characterPointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1
     characterPointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1
     characterRaycaster.setFromCamera(characterPointer, camera)
-    const upperFloor = themeGroups.get('upperFloor')
-    const hit = characterRaycaster.intersectObject(room, true).find(({ object }) => {
-      if (!object.isMesh || object.userData.hoverHighlight || !isShown(object)) return false
-      for (let node = object; node; node = node.parent) if (node === upperFloor) return false
-      return true
-    })
-    let hitObject = hit?.object
-    while (hitObject && hitObject.parent !== room) hitObject = hitObject.parent
-    const name = customizableFurniture.find(item => themeGroups.get(item) === hitObject)
+    const hit = characterRaycaster.intersectObject(room, true)
+      .find(({ object }) => object.isMesh && !object.userData.hoverHighlight && isShown(object))
+    for (let node = hit?.object; node; node = node.parent) {
+      const name = customizableFurniture.find(item => themeGroups.get(item) === node)
+      if (name) return (furnitureFloor[name] ?? 0) === activeFloor ? name : null
+    }
+    return null
+  }
+  function handleFurnitureClick(event) {
+    if (Math.hypot(event.clientX - pointerDownAt.x, event.clientY - pointerDownAt.y) > 6) return
+    const name = pickFurniture(event)
     if (!name) return
     clearFurnitureHover()
     onFurnitureClick(name)
@@ -2026,6 +2029,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     const deltaSeconds = lastFrameTime === null ? 0 : Math.min(0.1, (timestamp - lastFrameTime) / 1000)
     lastFrameTime = timestamp
     updateViewShift(deltaSeconds)
+    if (!floorTransition && !cameraTransition) updateSmoothZoom(deltaSeconds)
     updateSleepingCat(timestamp / 1000)
     man.update(timestamp / 1000, true)
     if (floorTransition) updateFloorTransition(timestamp)
@@ -2129,6 +2133,31 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     }
   }
 
+  // Vloeiend zoomen: het muiswiel zet een doelzoom, en de camera glijdt er elke frame naartoe
+  // (OrbitControls springt per scrollstap). Knijpen op touch blijft via OrbitControls lopen.
+  let zoomTarget = null
+  container.addEventListener('wheel', event => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!controls.enabled) return
+    const base = zoomTarget ?? camera.zoom
+    const step = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY
+    const factor = Math.exp(-step * (event.ctrlKey ? 0.01 : 0.0018))
+    zoomTarget = THREE.MathUtils.clamp(base * factor, controls.minZoom, controls.maxZoom)
+  }, { capture: true, passive: false })
+  function updateSmoothZoom(deltaSeconds) {
+    if (zoomTarget === null) return
+    const difference = zoomTarget - camera.zoom
+    if (Math.abs(difference) < 0.0005) {
+      camera.zoom = zoomTarget
+      zoomTarget = null
+    } else camera.zoom += difference * (1 - Math.exp(-deltaSeconds * 10))
+    camera.updateProjectionMatrix()
+  }
+  function zoomTo(zoom) {
+    zoomTarget = THREE.MathUtils.clamp(zoom, controls.minZoom, controls.maxZoom)
+  }
+
   function centerRoomInView() {
     // Meten zonder tutorialverschuiving, daarna die verschuiving terugzetten
     if (camera.view?.enabled) camera.clearViewOffset()
@@ -2156,21 +2185,27 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   }
 
   function resetView() {
+    zoomTarget = null
     floorTransition = null
     cameraTransition = null
     sofaReturnView = null
     displayedFloorHeight = activeFloor * 5.2
     controls.enabled = true
     controls.enableDamping = false
-    camera.position.set(-12 + roomViewOffset, 11 + activeFloor * 5.2, 12 + roomViewOffset)
+    camera.position.set(-12 + roomViewOffset, 11 + cameraHeightFor(activeFloor * 5.2), 12 + roomViewOffset)
     camera.zoom = 1
     camera.updateProjectionMatrix()
-    controls.target.set(0.2 + roomViewOffset, 1.25 + activeFloor * 5.2, -0.15 + roomViewOffset)
+    controls.target.set(0.2 + roomViewOffset, 1.25 + cameraHeightFor(activeFloor * 5.2), -0.15 + roomViewOffset)
     controls.update()
     centerRoomInView()
     controls.enableDamping = true
     render()
   }
+
+  // Op de bovenverdieping kijkt de camera iets lager dan 5.2 hoger, zodat het gebouw hoger
+  // op het scherm staat en de bovenkamer niet zo laag in beeld zakt.
+  const UPPER_FLOOR_CAMERA_DROP = 1.1
+  const cameraHeightFor = floorHeight => floorHeight - UPPER_FLOOR_CAMERA_DROP * (floorHeight / 5.2)
 
   function setFloor(floor) {
     if ((floor !== 0 && floor !== 1) || floor === activeFloor) return
@@ -2184,7 +2219,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       child.visible = true
     }
     const targetHeight = floor * 5.2
-    const offset = new THREE.Vector3(0, targetHeight - displayedFloorHeight, 0)
+    const offset = new THREE.Vector3(0, cameraHeightFor(targetHeight) - cameraHeightFor(displayedFloorHeight), 0)
     floorTransition = {
       startedAt: performance.now(),
       duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : floor === 0 ? 1300 : 700,
@@ -2222,6 +2257,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   }
 
   function transitionCamera(position, target, zoom, upperOpacity, duration = 750) {
+    zoomTarget = null
     cameraTransition = {
       startedAt: performance.now(),
       duration,
@@ -2267,7 +2303,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   }
 
   function focusFurniture(name = 'sofa') {
-    if (activeFloor !== 0 || !themeGroups.has(name)) return false
+    if (!themeGroups.has(name) || activeFloor !== (furnitureFloor[name] ?? 0)) return false
     if (!sofaReturnView) {
       // Zoomt de camera nog terug van een vorig meubel? Dan is dát het terugkeerpunt,
       // niet het half ingezoomde beeld van nu (anders blijf je na het sluiten ingezoomd vastzitten).
@@ -2492,6 +2528,23 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       return true
     },
     setViewShift,
+    zoomTo,
+    // Foto van het huis: de pixelweergave 3× vergroot (scherpe pixels), met een achtergrond die
+    // main.js tekent (dag/nacht en sterren). Geeft een PNG-data-URL terug.
+    takeScreenshot(drawBackground = () => {}) {
+      setFurnitureGlow(null)
+      render()
+      const source = renderer.domElement
+      const photo = document.createElement('canvas')
+      photo.width = source.width * 3
+      photo.height = source.height * 3
+      const context = photo.getContext('2d')
+      context.imageSmoothingEnabled = false
+      drawBackground(context, photo.width, photo.height)
+      context.drawImage(source, 0, 0, photo.width, photo.height)
+      setFurnitureGlow(tutorialGlowTarget ?? null)
+      return photo.toDataURL('image/png')
+    },
     setFurnitureModel(item, name) {
       if (!setFurnitureModel(item, name)) return false
       render()

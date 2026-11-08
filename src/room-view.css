@@ -1015,6 +1015,8 @@ body.is-sofa-customizing .floor-navigation { display: none; }
 /* ---------- Intro & tutorial ---------- */
 .intro[hidden] { display: none; }
 .intro { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+/* Knijpen op de ballon mag de pagina niet zoomen */
+.intro-bubble, .sofa-customizer { touch-action: pan-y; }
 /* Witte pixel-tekstballon: harde rand met getrapte hoeken, geen schaduw of vervaging */
 .intro-bubble {
   --px-line: #2B1D14;
@@ -1136,9 +1138,20 @@ body.is-night .night-stars { opacity: 1; }
 .sofa-customizer-reset { min-height: 34px; }
 .sofa-customizer p { color: #8A7B6B; }
 
-/* ---------- Knop: terug naar het hele huis ---------- */
-.view-reset { position: fixed; z-index: 6; top: 16px; left: 64px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: #B0D4D2; cursor: pointer; box-shadow: 0 3px 0 #426B83; }
-.view-reset svg { width: 24px; height: 24px; image-rendering: pixelated; }
-.view-reset:hover { background: #94CAE2; }
-.view-reset:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
-body.is-sofa-customizing .view-reset { display: grid; }
+/* ---------- Knoppen linksboven: reset en foto (naast de ?) ---------- */
+.house-reset, .house-photo { position: fixed; z-index: 6; top: 16px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: #B0D4D2; cursor: pointer; box-shadow: 0 3px 0 #426B83; }
+.house-reset { left: 64px; }
+.house-photo { left: 112px; }
+.house-reset svg, .house-photo svg { width: 24px; height: 24px; image-rendering: pixelated; }
+.house-reset:hover, .house-photo:hover { background: #94CAE2; }
+.house-reset:focus-visible, .house-photo:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+.house-reset:active, .house-photo:active { transform: translateY(2px); box-shadow: 0 1px 0 #426B83; }
+body.is-intro .house-reset:not(.is-tutorial-highlight), body.is-intro .house-photo:not(.is-tutorial-highlight) { visibility: hidden; }
+/* Fotoflits */
+.photo-flash { position: fixed; inset: 0; z-index: 30; background: #fff; opacity: 0; pointer-events: none; }
+body.is-photo-flash .photo-flash { animation: photo-flash 0.45s steps(3, end); }
+@keyframes photo-flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { body.is-photo-flash .photo-flash { animation: none; } }
+
+/* Gsm: klok rechtsboven zodat ze niet over de knoppen linksboven valt */
+@media (max-width: 560px) { .belgian-clock { left: auto; right: 16px; top: 26px; transform: none; } }
