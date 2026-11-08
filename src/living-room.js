@@ -1959,9 +1959,14 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     setFurnitureGlow(hoveredTarget ?? tutorialGlowTarget ?? null)
   }
   function setFurnitureGlow(target) {
-    const targets = Array.isArray(target) ? target : [target]
+    const targets = new Set(Array.isArray(target) ? target : [target])
+    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+      hoverTargets
+        .filter(item => (furnitureFloor[item.name] ?? 0) === activeFloor)
+        .forEach(item => targets.add(item))
+    }
     hoverTargets.forEach(item => item.highlights.forEach(highlight => {
-      highlight.visible = targets.includes(item)
+      highlight.visible = targets.has(item)
     }))
   }
   function clearFurnitureHover() {
@@ -1981,6 +1986,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   // opent niets), en enkel meubels van de verdieping waar je bent tellen. Slepen telt niet als klik.
   const customizableFurniture = ['sofa', 'desk', 'kitchen', 'bed', 'shower', 'dresser']
   const furnitureFloor = { bed: 1, shower: 1, dresser: 1 }
+  setFurnitureGlow(null)
   const pointerDownAt = { x: 0, y: 0 }
   renderer.domElement.addEventListener('pointerdown', event => {
     pointerDownAt.x = event.clientX
@@ -2223,6 +2229,7 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
     controls.enableDamping = false
     controls.update()
     activeFloor = floor
+    setFurnitureGlow(tutorialGlowTarget)
     for (const child of room.children) {
       child.visible = true
     }
@@ -2568,6 +2575,37 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       const point = new THREE.Box3().setFromObject(group).getCenter(new THREE.Vector3()).project(camera)
       const bounds = renderer.domElement.getBoundingClientRect()
       return { x: bounds.left + (point.x + 1) / 2 * bounds.width, y: bounds.top + (1 - point.y) / 2 * bounds.height }
+    },
+    getScreenBounds(name) {
+      const group = themeGroups.get(name)
+      if (!group) return null
+      scene.updateMatrixWorld(true)
+      camera.updateMatrixWorld(true)
+      const box = new THREE.Box3().setFromObject(group)
+      if (box.isEmpty()) return null
+      const bounds = renderer.domElement.getBoundingClientRect()
+      const point = new THREE.Vector3()
+      const projected = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+      for (const x of [box.min.x, box.max.x]) {
+        for (const y of [box.min.y, box.max.y]) {
+          for (const z of [box.min.z, box.max.z]) {
+            point.set(x, y, z).project(camera)
+            const screenX = bounds.left + (point.x + 1) / 2 * bounds.width
+            const screenY = bounds.top + (1 - point.y) / 2 * bounds.height
+            projected.left = Math.min(projected.left, screenX)
+            projected.top = Math.min(projected.top, screenY)
+            projected.right = Math.max(projected.right, screenX)
+            projected.bottom = Math.max(projected.bottom, screenY)
+          }
+        }
+      }
+      return projected
+    },
+    getViewShift() {
+      return { ...viewShift }
+    },
+    getHighlightedFurniture() {
+      return hoverTargets.filter(target => target.highlights.some(highlight => highlight.visible)).map(target => target.name)
     },
     projectPoint([x, y, z]) {
       const point = new THREE.Vector3(x, y, z).project(camera)

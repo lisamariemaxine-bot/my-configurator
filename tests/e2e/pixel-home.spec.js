@@ -6,6 +6,8 @@ import { expect, test } from '@playwright/test'
 
 const room = page => ({
   point: name => page.evaluate(item => window.__pixelHome.room.getScreenPoint(item), name),
+  bounds: name => page.evaluate(item => window.__pixelHome.room.getScreenBounds(item), name),
+  highlightedFurniture: () => page.evaluate(() => window.__pixelHome.room.getHighlightedFurniture()),
   project: xyz => page.evaluate(point => window.__pixelHome.room.projectPoint(point), xyz),
   camera: () => page.evaluate(() => window.__pixelHome.room.getCameraState()),
 })
@@ -385,5 +387,49 @@ test.describe('responsive', () => {
     expect(panel.x).toBeGreaterThanOrEqual(0)
     expect(panel.x + panel.width).toBeLessThanOrEqual(viewport.width)
     expect(panel.y + panel.height).toBeLessThanOrEqual(viewport.height)
+  })
+
+  test('op mobiel blijft het aangepaste meubel boven het paneel zichtbaar', async ({ page }) => {
+    if (page.viewportSize().width > 560) test.skip()
+    await openApp(page)
+    await skipTutorial(page)
+    const expectFurnitureAbovePanel = async name => {
+      const panel = page.locator('.sofa-customizer:visible').first()
+      await expect(panel).toBeVisible()
+      const panelTop = (await panel.boundingBox()).y
+      await expect.poll(async () => (await room(page).bounds(name)).bottom).toBeLessThan(panelTop - 16)
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(800)
+    }
+    for (const name of ['sofa', 'desk', 'kitchen']) {
+      await clickAt(page, await room(page).point(name))
+      if (name === 'desk') {
+        await page.locator('.furniture-customizer-models button', { hasText: 'Gaming' }).click()
+      }
+      await expectFurnitureAbovePanel(name)
+    }
+    await page.locator('.floor-arrow[data-floor="1"]').click()
+    await expect.poll(async () => (await room(page).camera()).activeFloor).toBe(1)
+    await page.waitForTimeout(800)
+    for (const [name, point] of [
+      ['bed', [-0.9, 6.0, -2.0]],
+      ['shower', [4.3, 5.35, -3.0]],
+      ['dresser', [3.75, 5.8, -0.1]],
+    ]) {
+      await clickAt(page, await room(page).project(point))
+      await expectFurnitureAbovePanel(name)
+    }
+  })
+
+  test('op mobiel hebben aanpasbare meubels op de gekozen verdieping altijd een witte contour', async ({ page }) => {
+    if (page.viewportSize().width > 560) test.skip()
+    await openApp(page)
+    await expect.poll(() => room(page).highlightedFurniture()).toEqual(['sofa', 'kitchen', 'desk'])
+    await page.locator('.floor-arrow[data-floor="1"]').click()
+    await expect.poll(async () => (await room(page).camera()).activeFloor).toBe(1)
+    await expect.poll(() => room(page).highlightedFurniture()).toEqual(['bed', 'shower', 'dresser'])
+    await page.locator('.floor-arrow[data-floor="0"]').click()
+    await expect.poll(async () => (await room(page).camera()).activeFloor).toBe(0)
+    await expect.poll(() => room(page).highlightedFurniture()).toEqual(['sofa', 'kitchen', 'desk'])
   })
 })

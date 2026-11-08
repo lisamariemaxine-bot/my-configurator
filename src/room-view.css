@@ -6,8 +6,6 @@ body { font-family: 'Press Start 2P', monospace; }
 body.is-building-room #room-scene { width: calc(100vw - 300px); height: 100vh; height: 100dvh; margin-left: 300px; }
 #room-scene canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: grab; }
 #room-scene canvas:active { cursor: grabbing; }
-.belgian-clock { position: fixed; z-index: 6; top: 18px; left: 50%; transform: translateX(-50%); padding: 0; border: 0; background: transparent; color: #000; box-shadow: none; font: 700 24px/1 monospace; font-variant-numeric: tabular-nums; letter-spacing: 0.06em; white-space: nowrap; }
-body.is-night .belgian-clock { color: #fff; }
 .coin-display { position: fixed; z-index: 5; top: 16px; right: 16px; display: flex; min-width: 78px; height: 48px; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 5px; padding: 0 9px 0 4px; border: 0; background: transparent; box-shadow: none; }
 .coin-display svg { width: 40px; height: 40px; flex: 0 0 40px; overflow: visible; image-rendering: pixelated; filter: drop-shadow(0 2px 1px rgb(40 26 10 / 30%)); }
 .coin-balance { min-width: 30px; color: #75451F; font: 700 40px/1 monospace; text-align: right; }
@@ -962,7 +960,6 @@ body.is-night .floor-visibility-toggle { background: transparent; color: #B0D4D2
 body.is-night .floor-visibility-toggle:hover, body.is-night .floor-visibility-toggle[aria-pressed="true"] { color: #94CAE2; }
 body.is-night .floor-navigation > .night-toggle { background: transparent; color: #B0D4D2; }
 body.is-shop-page .floor-navigation { display: none; }
-@media (max-width: 560px) { .belgian-clock { top: 20px; font-size: 18px; } }
 
 .sofa-customizer {
   position: fixed;
@@ -1008,7 +1005,7 @@ body.is-shop-page .floor-navigation { display: none; }
 body.is-sofa-customizing .room-toolbar,
 body.is-sofa-customizing .floor-navigation { display: none; }
 @media (max-width: 560px) {
-  .sofa-customizer { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; transform: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sofa-customizer { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; max-height: 50dvh; overflow-y: auto; overscroll-behavior: contain; transform: none; grid-template-columns: 1fr 1fr; gap: 8px; }
   .sofa-customizer-heading, .sofa-model-options, .sofa-shape-options, .sofa-customizer-reset, .sofa-customizer p, .furniture-customizer-colors { grid-column: 1 / -1; }
 }
 
@@ -1153,6 +1150,3 @@ body.is-intro .house-reset:not(.is-tutorial-highlight), body.is-intro .house-pho
 body.is-photo-flash .photo-flash { animation: photo-flash 0.45s steps(3, end); }
 @keyframes photo-flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { body.is-photo-flash .photo-flash { animation: none; } }
-
-/* Gsm: klok rechtsboven zodat ze niet over de knoppen linksboven valt */
-@media (max-width: 560px) { .belgian-clock { left: auto; right: 16px; top: 26px; transform: none; } }

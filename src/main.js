@@ -66,7 +66,6 @@ try {
 
 document.querySelector('#app').innerHTML = `
   <div id="room-scene" role="img" aria-label="Kamer 1: The Living Room"></div>
-  <time class="belgian-clock" id="belgian-clock" aria-label="Belgische tijd"></time>
   <section class="sofa-customizer" id="sofa-customizer" role="dialog" aria-labelledby="sofa-customizer-title" hidden>
     <header class="sofa-customizer-heading">
       <h2 id="sofa-customizer-title">Sofa aanpassen</h2>
@@ -240,15 +239,7 @@ document.querySelector('#app').innerHTML = `
     </section>
   </div>`
 
-const belgianClock = document.querySelector('#belgian-clock')
 const nightIndicator = document.querySelector('.night-toggle')
-const belgianTimeFormatter = new Intl.DateTimeFormat('nl-BE', {
-  timeZone: 'Europe/Brussels',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hourCycle: 'h23',
-})
 // Het huis start altijd in dagmodus (los van het uur); de bezoeker wisselt zelf met de zon/maan-knop.
 function applyNightMode(isNight) {
   nightIndicator.setAttribute('aria-label', isNight ? 'Schakel dagmodus in' : 'Schakel nachtmodus in')
@@ -257,12 +248,6 @@ function applyNightMode(isNight) {
   nightIndicator.classList.toggle('is-night', isNight)
   document.body.classList.toggle('is-night', isNight)
   room?.setNightMode(isNight)
-}
-function updateBelgianClock() {
-  const now = new Date()
-  belgianClock.textContent = belgianTimeFormatter.format(now)
-  belgianClock.dateTime = now.toISOString()
-  window.setTimeout(updateBelgianClock, 1000 - now.getMilliseconds())
 }
 nightIndicator.addEventListener('click', () => {
   applyNightMode(!nightIndicator.classList.contains('is-night'))
@@ -359,7 +344,6 @@ for (let index = 0; index < 46; index++) {
 }
 document.querySelector('#room-scene').prepend(nightStars)
 applyNightMode(false)
-updateBelgianClock()
 
 characterHotspot.addEventListener('click', () => {
   const bounds = characterHotspot.getBoundingClientRect()
@@ -449,6 +433,7 @@ function openFurnitureCustomizer(name) {
   furnitureCustomizer.querySelector('#furniture-customizer-title').textContent = config.title
   renderFurnitureCustomizer()
   furnitureCustomizer.hidden = false
+  liftViewAbovePanel(furnitureCustomizer, name)
   document.body.classList.add('is-sofa-customizing')
   furnitureCustomizer.querySelector('.furniture-customizer-close').focus()
 }
@@ -501,6 +486,61 @@ function renderFurnitureCustomizer() {
     control.append(input)
     return control
   }))
+  if (!furnitureCustomizer.hidden) liftViewAbovePanel(furnitureCustomizer, name)
+}
+
+let panelFitFrame = 0
+function liftViewAbovePanel(panel, furnitureName) {
+  if (!room) return
+  if (!window.matchMedia('(max-width: 560px)').matches) {
+    room.setViewShift({})
+    return
+  }
+  window.cancelAnimationFrame(panelFitFrame)
+  const startedAt = performance.now()
+  function fitFrame() {
+    panelFitFrame = 0
+    if (panel.hidden || !window.matchMedia('(max-width: 560px)').matches) return
+    const bounds = room.getScreenBounds(furnitureName)
+    if (!bounds) return
+    const width = document.documentElement.clientWidth
+    const height = document.documentElement.clientHeight
+    const currentShift = room.getViewShift()
+    const centerX = width / 2
+    const centerY = height / 2
+    const unshift = (value, center, offset, size) => center + (value - center - offset * size) / currentShift.scale
+    const baseBounds = {
+      left: unshift(bounds.left, centerX, currentShift.x, width),
+      right: unshift(bounds.right, centerX, currentShift.x, width),
+      top: unshift(bounds.top, centerY, currentShift.y, height),
+      bottom: unshift(bounds.bottom, centerY, currentShift.y, height),
+    }
+    const panelTop = panel.getBoundingClientRect().top
+    const safeTop = 12
+    const safeBottom = Math.max(safeTop, panelTop - 16)
+    const availableHeight = safeBottom - safeTop
+    const availableWidth = Math.max(0, width - 24)
+    const scale = Math.min(
+      1,
+      availableWidth / (baseBounds.right - baseBounds.left),
+      availableHeight / (baseBounds.bottom - baseBounds.top),
+    )
+    const scaledCenterX = centerX + ((baseBounds.left + baseBounds.right) / 2 - centerX) * scale
+    const scaledCenterY = centerY + ((baseBounds.top + baseBounds.bottom) / 2 - centerY) * scale
+    const shift = {
+      x: (centerX - scaledCenterX) / width,
+      y: ((safeTop + safeBottom) / 2 - scaledCenterY) / height,
+      scale,
+    }
+    room.setViewShift(shift, true)
+    if (performance.now() - startedAt < 900) panelFitFrame = window.requestAnimationFrame(fitFrame)
+  }
+  fitFrame()
+}
+function releaseViewAbovePanel() {
+  window.cancelAnimationFrame(panelFitFrame)
+  panelFitFrame = 0
+  if (window.matchMedia('(max-width: 560px)').matches) room?.setViewShift({})
 }
 
 function closeFurnitureCustomizer() {
@@ -508,6 +548,7 @@ function closeFurnitureCustomizer() {
   furnitureCustomizer.hidden = true
   customizingFurniture = null
   document.body.classList.remove('is-sofa-customizing')
+  releaseViewAbovePanel()
   room?.restoreSofaView()
   resumeTutorial()
 }
@@ -530,6 +571,7 @@ function openSofaCustomizer() {
   updateSofaCustomizer()
   sofaCustomizer.hidden = false
   document.body.classList.add('is-sofa-customizing')
+  liftViewAbovePanel(sofaCustomizer, 'sofa')
   sofaCustomizerClose.focus()
 }
 
@@ -537,10 +579,15 @@ function closeSofaCustomizer() {
   if (sofaCustomizer.hidden) return
   sofaCustomizer.hidden = true
   document.body.classList.remove('is-sofa-customizing')
+  releaseViewAbovePanel()
   room?.restoreSofaView()
   resumeTutorial()
 }
 
+window.addEventListener('resize', () => {
+  if (!sofaCustomizer.hidden) liftViewAbovePanel(sofaCustomizer, 'sofa')
+  else if (!furnitureCustomizer.hidden) liftViewAbovePanel(furnitureCustomizer, customizingFurniture)
+})
 
 function applySofaColor(keys, color, extraColors = {}) {
   if (!room) return
