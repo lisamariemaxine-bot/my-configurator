@@ -1,27 +1,136 @@
 import './room-view.css'
 import { createLivingRoom } from './living-room.js'
+import { shopItems, furnitureIcons, foodIcons, furnitureStyles, sofaModels, furnitureCustomizers } from './furniture-config.js'
+import { darkenHex, readStoredJSON, keepValidChoices, clamp } from './utils.js'
 
-const shopItems = {
-  food: [
-    ['Appel', '€ 0,50', '#D97A50'],
-    ['Brood', '€ 2,20', '#C7955D'],
-    ['Melk', '€ 1,35', '#D8E5E0'],
-    ['Kaas', '€ 3,40', '#E4BE52'],
-    ['Tomaat', '€ 0,60', '#C85E4E'],
-    ['Koekjes', '€ 2,10', '#A87958'],
-  ],
-  furniture: [
-    ['Poef', '€ 49,00', '#778856'],
-    ['Lamp', '€ 32,50', '#F0781C'],
-    ['Stoel', '€ 65,00', '#946851'],
-    ['Plant', '€ 12,00', '#54794D'],
-    ['Sofa', '€ 399,00', '#B0D4D2'],
-    ['Salontafel', '€ 89,00', '#502E1C'],
-  ],
+
+
+
+const FURNITURE_STYLE_STORAGE_KEY = 'pixel-home-furniture-styles'
+let selectedFurnitureStyles = {}
+const FURNITURE_COLOR_STORAGE_KEY = 'pixel-home-furniture-colors'
+const SOFA_CUSHION_SHAPE_STORAGE_KEY = 'pixel-home-sofa-cushion-shape'
+const SOFA_MODEL_STORAGE_KEY = 'pixel-home-sofa-model'
+let selectedSofaModel = 'modern'
+// Gekozen model per meubel (bureau, keuken), bv. { desk: 'gaming' }
+const FURNITURE_MODEL_STORAGE_KEY = 'pixel-home-furniture-models'
+// Alleen bestaande modellen overhouden: een oude of kapotte waarde in localStorage breekt niets
+let selectedFurnitureModels = keepValidChoices(
+  readStoredJSON(window.localStorage, FURNITURE_MODEL_STORAGE_KEY),
+  Object.fromEntries(Object.entries(furnitureCustomizers)
+    .filter(([, config]) => config.models)
+    .map(([item, config]) => [item, config.models.map(model => model.key)])),
+)
+try {
+  const savedModel = localStorage.getItem(SOFA_MODEL_STORAGE_KEY)
+  if (sofaModels.some(([key]) => key === savedModel)) selectedSofaModel = savedModel
+} catch (error) {
+  console.warn('Het sofamodel kon niet worden geladen.', error)
+}
+let customFurnitureColors = {}
+let selectedSofaCushionShape = 'rounded'
+try {
+  customFurnitureColors = JSON.parse(localStorage.getItem(FURNITURE_COLOR_STORAGE_KEY) || '{}') || {}
+} catch (error) {
+  console.warn('Meubelkleuren konden niet worden geladen.', error)
+}
+const savedSofaColors = customFurnitureColors.sofa
+const savedUpholsteryColor = savedSofaColors?.blue ?? savedSofaColors?.sky
+if (savedUpholsteryColor) {
+  savedSofaColors.sofaSeatCushion = savedUpholsteryColor
+  savedSofaColors.sofaBackCushion = savedUpholsteryColor
+}
+try {
+  const savedShape = localStorage.getItem(SOFA_CUSHION_SHAPE_STORAGE_KEY)
+  if (savedShape === 'rounded' || savedShape === 'square') selectedSofaCushionShape = savedShape
+} catch (error) {
+  console.warn('De kussenvorm kon niet worden geladen.', error)
+}
+
+function saveCustomColors() {
+  try {
+    localStorage.setItem(FURNITURE_COLOR_STORAGE_KEY, JSON.stringify(customFurnitureColors))
+  } catch (error) {
+    console.error('Meubelkleuren konden niet worden opgeslagen.', error)
+  }
+}
+
+try {
+  const savedStyles = JSON.parse(localStorage.getItem(FURNITURE_STYLE_STORAGE_KEY) || '{}')
+  selectedFurnitureStyles = Object.fromEntries(
+    Object.entries(savedStyles).filter(([, style]) => furnitureStyles.some(([key]) => key === style)),
+  )
+} catch (error) {
+  console.warn('Meubelstijlen konden niet worden geladen.', error)
 }
 
 document.querySelector('#app').innerHTML = `
   <div id="room-scene" role="img" aria-label="Kamer 1: The Living Room"></div>
+  <time class="belgian-clock" id="belgian-clock" aria-label="Belgische tijd"></time>
+  <section class="sofa-customizer" id="sofa-customizer" role="dialog" aria-labelledby="sofa-customizer-title" hidden>
+    <header class="sofa-customizer-heading">
+      <h2 id="sofa-customizer-title">Sofa aanpassen</h2>
+      <button class="sofa-customizer-close" type="button" aria-label="Sofa-aanpassing sluiten">×</button>
+    </header>
+    <fieldset class="sofa-model-options">
+      <legend>Model</legend>
+      ${sofaModels.map(([key, label, icon]) => `<button type="button" data-sofa-model="${key}" aria-pressed="false">
+        <svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${icon}</svg>
+        <span>${label}</span>
+      </button>`).join('')}
+    </fieldset>
+    <label class="sofa-color-control" for="sofa-body-color">Kleur sofa
+      <input id="sofa-body-color" type="color" value="#B0D4D2">
+    </label>
+    <label class="sofa-color-control" for="sofa-cushion-color">Kleur sierkussens
+      <input id="sofa-cushion-color" type="color" value="#94CAE2">
+    </label>
+    <fieldset class="sofa-shape-options">
+      <legend>Vorm zitkussens</legend>
+      <button type="button" data-cushion-shape="rounded">Rond</button>
+      <button type="button" data-cushion-shape="square">Strak</button>
+    </fieldset>
+    <button class="sofa-customizer-reset" type="button">Herstel kleuren en vorm</button>
+    <p>Je ziet elke aanpassing meteen.</p>
+  </section>
+  <section class="sofa-customizer furniture-customizer" id="furniture-customizer" role="dialog" aria-labelledby="furniture-customizer-title" hidden>
+    <header class="sofa-customizer-heading">
+      <h2 id="furniture-customizer-title"></h2>
+      <button class="sofa-customizer-close furniture-customizer-close" type="button" aria-label="Aanpassen sluiten">×</button>
+    </header>
+    <fieldset class="sofa-model-options furniture-customizer-models" hidden></fieldset>
+    <div class="furniture-customizer-colors"></div>
+    <button class="sofa-customizer-reset furniture-customizer-reset" type="button">Herstel kleuren</button>
+    <p>Je ziet elke aanpassing meteen.</p>
+  </section>
+  <nav class="floor-navigation" aria-label="Verdieping kiezen">
+    <button type="button" class="floor-arrow" data-floor="1" aria-label="Bekijk bovenverdieping" aria-pressed="false" title="Bovenverdieping"><svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path d="M10 4h4v3h3v3h3v3h3v6H1v-6h3v-3h3V7h3Z"/></svg></button>
+    <button type="button" class="floor-arrow" data-floor="0" aria-label="Bekijk benedenverdieping" aria-pressed="true" title="Benedenverdieping"><svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 5h22v6h-3v3h-3v3h-3v3h-4v-3H7v-3H4v-3H1Z"/></svg></button>
+    <button type="button" class="floor-visibility-toggle" aria-label="Verberg transparante verdieping" aria-pressed="true" title="Verberg transparante verdieping">
+      <svg class="eye-open-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path fill-rule="evenodd" d="M1 12h3V9h3V7h3V6h4v1h3v2h3v3h3v2h-3v3h-3v2h-4v1h-3v-1H7v-2H4v-3H1z M9 10h2V9h2v1h2v2h1v2h-1v2h-2v1h-2v-1H9v-2H8v-2h1z"/><path class="eye-pupil" d="M11 10h2v1h1v3h-1v1h-2v-1h-1v-3h1z"/></svg>
+      <svg class="eye-closed-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path fill-rule="evenodd" d="M1 12h3V9h3V7h3V6h4v1h3v2h3v3h3v2h-3v3h-3v2h-4v1h-3v-1H7v-2H4v-3H1z M9 10h2V9h2v1h2v2h1v2h-1v2h-2v1h-2v-1H9v-2H8v-2h1z"/><path class="eye-pupil" d="M11 10h2v1h1v3h-1v1h-2v-1h-1v-3h1z"/><g class="eye-slash"><rect x="17" y="2" width="4" height="4"/><rect x="14" y="5" width="4" height="4"/><rect x="11" y="8" width="4" height="4"/><rect x="8" y="11" width="4" height="4"/><rect x="5" y="14" width="4" height="4"/><rect x="2" y="17" width="4" height="4"/></g></svg>
+    </button>
+    <button class="night-toggle" type="button" aria-label="Automatische dag- en nachtmodus" aria-pressed="false" title="Automatische dag- en nachtmodus">
+      <svg class="day-sun-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true">
+        <path class="sun-edge" d="M9 1h6v1h3v2h2v2h2v3h1v6h-1v3h-2v2h-2v2h-3v1H9v-1H6v-2H4v-2H2v-3H1V9h1V6h2V4h2V2h3z"/>
+        <path class="sun-light" d="M9 3h6v1h3v2h2v3h1v6h-1v3h-2v2h-3v1H9v-1H6v-2H4v-3H3V9h1V6h2V4h3z"/>
+      </svg>
+      <svg class="night-moon-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true">
+        <path class="moon-edge" d="M12 1H9v1H6v2H4v2H2v3H1v6h1v3h2v2h2v2h3v1h3z"/>
+        <path class="moon-light" d="M12 3H9v1H6v2H4v3H3v6h1v3h2v2h3v1h3z"/>
+      </svg>
+    </button>
+  </nav>
+  <div class="room-toolbar">
+  <div class="hunger-status" role="group" aria-label="Kamerbediening">
+    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="bread-clip-1"><path d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/></clipPath></defs><path class="bread-crust" d="M6 2H18V3H20V4H22V6H23V10H22V11H21V21H20V22H4V21H3V11H2V10H1V6H2V4H4V3H6Z"/><path class="bread-crumb-empty" d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/><rect class="bread-fill" data-bread-fill="0" x="0" y="0" width="24" height="24" clip-path="url(#bread-clip-1)"/></svg>
+    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="bread-clip-2"><path d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/></clipPath></defs><path class="bread-crust" d="M6 2H18V3H20V4H22V6H23V10H22V11H21V21H20V22H4V21H3V11H2V10H1V6H2V4H4V3H6Z"/><path class="bread-crumb-empty" d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/><rect class="bread-fill" data-bread-fill="1" x="0" y="0" width="24" height="24" clip-path="url(#bread-clip-2)"/></svg>
+    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="bread-clip-3"><path d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/></clipPath></defs><path class="bread-crust" d="M6 2H18V3H20V4H22V6H23V10H22V11H21V21H20V22H4V21H3V11H2V10H1V6H2V4H4V3H6Z"/><path class="bread-crumb-empty" d="M7 3H17V4H19V5H21V6H22V10H20V21H4V10H2V6H3V5H5V4H7Z"/><rect class="bread-fill" data-bread-fill="2" x="0" y="0" width="24" height="24" clip-path="url(#bread-clip-3)"/></svg>
+    <button class="timer-toggle" type="button" aria-label="Timer instellen" aria-expanded="false" aria-controls="timer-panel" title="Timer">
+      <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path class="timer-pixel-clock" d="M8 0h8v2h-2v2h4v2h2v2h2v10h-2v2h-2v2H6v-2H4v-2H2V8h2V6h2V4h4V2H8zm2 8v6h2v2h2v-2h-2V8z"/></svg>
+      <output class="timer-badge" id="timer-badge" hidden>25:00</output>
+    </button>
+  </div>
   <div class="coin-display" role="group" aria-label="Munten verdiend met studeren" title="Een munt per studieminuut">
     <svg viewBox="0 0 32 32" shape-rendering="crispEdges" aria-hidden="true">
       <path class="coin-edge" d="M11 1h10v2h4v3h3v4h2v12h-2v4h-3v3h-4v2H11v-2H7v-3H4v-4H2V10h2V6h3V3h4z"/>
@@ -30,6 +139,7 @@ document.querySelector('#app').innerHTML = `
       <text class="coin-symbol" x="17" y="22" text-anchor="middle">€</text>
     </svg>
     <output class="coin-balance" id="coin-balance" aria-label="Munten">0</output>
+  </div>
   </div>
   <button class="character-hotspot" type="button" aria-label="Klik op het mannetje om eten te geven" title="Geef eten aan het mannetje" hidden></button>
   <section class="shop-panel" id="shop-panel" role="dialog" aria-labelledby="shop-title" hidden>
@@ -51,9 +161,15 @@ document.querySelector('#app').innerHTML = `
       <button class="shop-back" type="button">‹ Categorieën</button>
       <h3 class="shop-category-title"></h3>
       <div class="shop-products"></div>
+      <div class="shop-controls" hidden></div>
+      <div class="shop-preview" role="dialog" aria-label="Preview" hidden>
+        <div class="shop-preview-stage" aria-hidden="true"></div>
+        <span class="shop-preview-name"></span>
+      </div>
     </div>
     <p class="shop-selection" aria-live="polite">Kies een categorie</p>
   </section>
+  <button class="room-preview-back" type="button">‹ Terug naar winkel</button>
   <section class="timer-panel" id="timer-panel" role="dialog" aria-labelledby="timer-title" hidden>
     <header class="timer-heading">
       <h2 id="timer-title">Timer</h2>
@@ -67,62 +183,30 @@ document.querySelector('#app').innerHTML = `
       <button class="timer-start" id="timer-start" type="button">Start</button>
       <button class="timer-reset" id="timer-reset" type="button">Reset</button>
     </div>
-  </section>
-  <section class="stats-panel" id="stats-panel" role="dialog" aria-labelledby="stats-title" hidden>
-    <header class="stats-heading">
+    <section class="stats-section" aria-labelledby="stats-title">
       <div class="stats-title-group">
-        <h2 id="stats-title">Timertijd per dag</h2>
+        <h3 id="stats-title">Werktijden</h3>
         <span class="stats-demo-badge" hidden>Voorbeelddata</span>
       </div>
-      <button class="stats-close" type="button" aria-label="Statistieken sluiten" title="Sluiten">×</button>
-    </header>
-    <div class="stats-week-toolbar">
-      <div class="stats-week-controls" aria-label="Week navigatie">
-        <button class="stats-week-button stats-week-previous" type="button" aria-label="Vorige week" title="Vorige week">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5M8 12h12"/></svg>
-        </button>
-        <output class="stats-week-label" aria-live="polite"></output>
-        <button class="stats-week-button stats-week-next" type="button" aria-label="Volgende week" title="Volgende week">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5M16 12H4"/></svg>
-        </button>
+      <div class="stats-week-toolbar">
+        <div class="stats-week-controls" aria-label="Week navigatie">
+          <button class="stats-week-button stats-week-previous" type="button" aria-label="Vorige week" title="Vorige week">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5M8 12h12"/></svg>
+          </button>
+          <output class="stats-week-label" aria-live="polite"></output>
+          <button class="stats-week-button stats-week-next" type="button" aria-label="Volgende week" title="Volgende week">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5M16 12H4"/></svg>
+          </button>
+        </div>
+        <p class="stats-week-total">Totaal <output class="stats-week-total-value"></output></p>
       </div>
-      <p class="stats-week-total">Totaal <output class="stats-week-total-value"></output></p>
-    </div>
-    <p class="stats-empty" hidden>Nog geen timertijd bijgehouden.</p>
-    <div class="stats-chart" role="list" aria-label="Timertijd per dag deze week"></div>
+      <p class="stats-empty" hidden>Nog geen timertijd bijgehouden.</p>
+      <div class="stats-chart" role="list" aria-label="Timertijd per dag deze week"></div>
+    </section>
   </section>
   <div class="timer-alert" id="timer-alert" role="status" aria-live="assertive" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6"/></svg>
     <span>Timer afgelopen</span>
-  </div>
-  <div class="hunger-status" role="group" aria-label="Hongerstatus en bediening">
-    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="heart-clip-1"><path d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></clipPath></defs><path class="heart-empty" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/><rect class="heart-fill" data-heart-fill="0" x="0" y="0" width="24" height="24" clip-path="url(#heart-clip-1)"/><path class="heart-outline" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></svg>
-    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="heart-clip-2"><path d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></clipPath></defs><path class="heart-empty" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/><rect class="heart-fill" data-heart-fill="1" x="0" y="0" width="24" height="24" clip-path="url(#heart-clip-2)"/><path class="heart-outline" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></svg>
-    <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><defs><clipPath id="heart-clip-3"><path d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></clipPath></defs><path class="heart-empty" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/><rect class="heart-fill" data-heart-fill="2" x="0" y="0" width="24" height="24" clip-path="url(#heart-clip-3)"/><path class="heart-outline" d="M12 24h-2v-2H8v-2H4v-2H2v-4H0v-4h2V6h2V4h6v2h4V4h6v2h2v4h2v4h-2v4h-2v2h-4v2h-2v2z"/></svg>
-    <button class="timer-toggle" type="button" aria-label="Timer instellen" aria-expanded="false" aria-controls="timer-panel" title="Timer">
-      <svg viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path class="timer-pixel-clock" d="M8 0h8v2h-2v2h4v2h2v2h2v10h-2v2h-2v2H6v-2H4v-2H2V8h2V6h2V4h4V2H8zm2 8v6h2v2h2v-2h-2V8z"/></svg>
-      <output class="timer-badge" id="timer-badge" hidden>25:00</output>
-    </button>
-    <button class="stats-toggle" type="button" aria-label="Dagelijkse timertijd openen" aria-expanded="false" aria-controls="stats-panel" title="Statistieken">
-      <svg viewBox="0 0 32 32" shape-rendering="crispEdges" aria-hidden="true">
-        <path class="stats-pixel-bars" d="M5 17h6v8H5zm9-8h6v16h-6zm9 3h6v13h-6z"/>
-        <path class="stats-pixel-bar-light" d="M6 18h2v6H6zm9-7h2v14h-2zm9 2h2v11h-2z"/>
-      </svg>
-    </button>
-    <button class="shop-toggle" type="button" aria-label="Winkel openen" aria-expanded="false" aria-controls="shop-panel" title="Winkel">
-      <svg viewBox="0 0 32 32" shape-rendering="crispEdges" aria-hidden="true">
-        <path class="shop-pixel-cart-frame" d="M2 3h6v4h4v4h19v4h-2v4h-2v4h-2v4H12v-4h12v-2H13v-4h11v-2H12v-4H9V9H6V7H2z"/>
-        <path class="shop-pixel-cart-basket" d="M14 13h13v1h-1v2h-1v2h-1v2h-9v-2h10v-2h-9v-2h10v-1H14z"/>
-        <path class="shop-pixel-cart-wheel" d="M14 25h4v4h-4zm10 0h4v4h-4z"/>
-      </svg>
-      <span class="shop-count" hidden>0</span>
-    </button>
-    <button class="night-toggle" type="button" aria-label="Schakel nachtmodus in" aria-pressed="false" title="Schakel nachtmodus in">
-      <svg class="moon-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true">
-        <path d="M16 1h-5v1H9v2H7v2H5v3H4v5h1v3h2v2h2v2h4v1h5v-2h-1v-1h-2v-1h-2v-2h-2v-2h-1v-2h-1v-4h2V7h2V5h2V4h3V2h-1z"/>
-      </svg>
-      <svg class="sun-icon" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"><path d="M9 1h6v3H9zM9 20h6v3H9zM1 9h3v6H1zm19 0h3v6h-3zM4 4h3v3H4zm13 13h3v3h-3zM17 4h3v3h-3zM4 17h3v3H4zM8 8h8v8H8z"/></svg>
-    </button>
   </div>
   <aside class="feed-menu" id="feed-menu" role="dialog" aria-labelledby="feed-title" hidden>
     <header class="feed-menu-heading">
@@ -131,15 +215,59 @@ document.querySelector('#app').innerHTML = `
     </header>
     <p class="feed-empty">De koelkast is leeg.</p>
     <div class="feed-products" role="list"></div>
-  </aside>`
+  </aside>
+  <button class="tutorial-toggle" type="button" aria-label="Uitleg opnieuw bekijken" title="Uitleg">?</button>
+  <button class="view-reset" type="button" aria-label="Terug naar het hele huis" title="Terug naar het hele huis">
+    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M5 1h2v1h1v1h1v1h1v1h1v1H1V5h1V4h1V3h1V2h1z"/><path fill="#fff" d="M2 6h8v5H2z"/><path fill="#426B83" d="M5 8h2v3H5z"/></svg>
+  </button>
+  <div class="intro" hidden>
+    <section class="intro-bubble" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-text">
+      <p class="intro-step-count" aria-live="polite"></p>
+      <h2 id="intro-title"></h2>
+      <p class="intro-text" id="intro-text"></p>
+      <button class="intro-action" type="button" hidden></button>
+      <div class="intro-buttons">
+        <button class="intro-skip" type="button">Overslaan</button>
+        <button class="intro-previous" type="button">Vorige</button>
+        <button class="intro-next" type="button">Volgende</button>
+      </div>
+    </section>
+  </div>`
+
+const belgianClock = document.querySelector('#belgian-clock')
+const nightIndicator = document.querySelector('.night-toggle')
+const belgianTimeFormatter = new Intl.DateTimeFormat('nl-BE', {
+  timeZone: 'Europe/Brussels',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
+// Het huis start altijd in dagmodus (los van het uur); de bezoeker wisselt zelf met de zon/maan-knop.
+function applyNightMode(isNight) {
+  nightIndicator.setAttribute('aria-label', isNight ? 'Schakel dagmodus in' : 'Schakel nachtmodus in')
+  nightIndicator.setAttribute('aria-pressed', String(isNight))
+  nightIndicator.title = isNight ? 'Nachtmodus' : 'Dagmodus'
+  nightIndicator.classList.toggle('is-night', isNight)
+  document.body.classList.toggle('is-night', isNight)
+  room?.setNightMode(isNight)
+}
+function updateBelgianClock() {
+  const now = new Date()
+  belgianClock.textContent = belgianTimeFormatter.format(now)
+  belgianClock.dateTime = now.toISOString()
+  window.setTimeout(updateBelgianClock, 1000 - now.getMilliseconds())
+}
+nightIndicator.addEventListener('click', () => {
+  applyNightMode(!nightIndicator.classList.contains('is-night'))
+})
 
 const feedMenu = document.querySelector('#feed-menu')
 const feedProducts = document.querySelector('.feed-products')
 const feedEmpty = document.querySelector('.feed-empty')
 const characterHotspot = document.querySelector('.character-hotspot')
 const hungerStatus = document.querySelector('.hunger-status')
-const heartFills = [...hungerStatus.querySelectorAll('[data-heart-fill]')]
-const statsToggle = document.querySelector('.stats-toggle')
+const breadFills = [...hungerStatus.querySelectorAll('[data-bread-fill]')]
 let foodItems = []
 let nextFoodId = 1
 let displayedFood = null
@@ -147,13 +275,13 @@ let displayedFood = null
 function updateHungerStatus({ food }) {
   if (food === displayedFood) return
   displayedFood = food
-  const filledHearts = Math.max(0, ((food - 10) / 90) * heartFills.length)
+  const filledBread = Math.max(0, ((food - 10) / 90) * breadFills.length)
 
-  heartFills.forEach((heart, index) => {
-    const fill = Math.min(1, Math.max(0, filledHearts - index))
+  breadFills.forEach((bread, index) => {
+    const fill = Math.min(1, Math.max(0, filledBread - index))
     const fillHeight = fill * 24
-    heart.setAttribute('y', String(24 - fillHeight))
-    heart.setAttribute('height', String(fillHeight))
+    bread.setAttribute('y', String(24 - fillHeight))
+    bread.setAttribute('height', String(fillHeight))
   })
   hungerStatus.setAttribute('aria-label', `Eten: ${food}%`)
 }
@@ -167,12 +295,17 @@ function renderFeedMenu() {
     button.dataset.foodId = item.id
     button.setAttribute('role', 'listitem')
     button.setAttribute('aria-label', `Geef ${item.name}`)
-    button.innerHTML = `<span class="feed-product-icon" style="--product-color:${item.color}" aria-hidden="true"></span><span class="feed-product-name">${item.name}</span><span class="feed-product-action">Geef</span>`
+    const icon = foodIcons[item.name]
+    const art = icon
+      ? `<span class="feed-product-icon feed-product-icon--art" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges">${icon}</svg></span>`
+      : `<span class="feed-product-icon" style="--product-color:${item.color}" aria-hidden="true"></span>`
+    button.innerHTML = `${art}<span class="feed-product-name">${item.name}</span><span class="feed-product-action">Geef</span>`
     return button
   }))
 }
 
 function openFeedMenu({ clientX, clientY, foods }) {
+  if (getComputedStyle(characterHotspot).display === 'none') return
   foodItems = foods
   renderFeedMenu()
   feedMenu.hidden = false
@@ -190,11 +323,37 @@ function updateCharacterHotspot({ x, y, visible }) {
 
 let room
 try {
-  room = createLivingRoom(document.querySelector('#room-scene'), updateHungerStatus, openFeedMenu, updateCharacterHotspot)
+  room = createLivingRoom(document.querySelector('#room-scene'), updateHungerStatus, openFeedMenu, updateCharacterHotspot, openFurnitureCustomizer)
+  // De muur is niet meer aanpasbaar: oude opgeslagen muurkleuren negeren
+  delete customFurnitureColors.walls
+  Object.keys({ ...selectedFurnitureStyles, ...customFurnitureColors }).forEach(group => {
+    room.setTheme(group, selectedFurnitureStyles[group] || 'original', customFurnitureColors[group] || {})
+  })
+  room.setSofaCushionShape(selectedSofaCushionShape)
+  room.setSofaModel(selectedSofaModel)
+  Object.entries(selectedFurnitureModels).forEach(([item, model]) => room.setFurnitureModel(item, model))
 } catch (error) {
   console.error(error)
-  document.querySelector('#room-scene').innerHTML = '<p class="room-error">This room needs WebGL. Try a browser with hardware acceleration enabled.</p>'
+  document.querySelector('#room-scene').innerHTML = '<p class="room-error">Dit huisje heeft WebGL nodig. Probeer een andere browser of zet hardwareversnelling aan.</p>'
 }
+// Sterrenhemel: glinsterende pixelsterretjes bovenaan, alleen zichtbaar in nachtmodus (achter het huis)
+const nightStars = document.createElement('div')
+nightStars.className = 'night-stars'
+nightStars.setAttribute('aria-hidden', 'true')
+let starSeed = 7
+const starRandom = () => (starSeed = (starSeed * 9301 + 49297) % 233280) / 233280
+for (let index = 0; index < 46; index++) {
+  const star = document.createElement('i')
+  if (index % 9 === 0) star.className = 'is-sparkle'
+  star.style.left = `${(starRandom() * 98 + 1).toFixed(2)}%`
+  star.style.top = `${(starRandom() * starRandom() * 42 + 1).toFixed(2)}%`
+  star.style.animationDelay = `${(starRandom() * 4).toFixed(2)}s`
+  star.style.animationDuration = `${(2.2 + starRandom() * 2.6).toFixed(2)}s`
+  nightStars.append(star)
+}
+document.querySelector('#room-scene').prepend(nightStars)
+applyNightMode(false)
+updateBelgianClock()
 
 characterHotspot.addEventListener('click', () => {
   const bounds = characterHotspot.getBoundingClientRect()
@@ -205,25 +364,258 @@ characterHotspot.addEventListener('click', () => {
   })
 })
 
-const nightToggle = document.querySelector('.night-toggle')
-nightToggle.addEventListener('click', () => {
-  const isNight = nightToggle.getAttribute('aria-pressed') !== 'true'
-  nightToggle.setAttribute('aria-pressed', String(isNight))
-  nightToggle.setAttribute('aria-label', isNight ? 'Schakel dagmodus in' : 'Schakel nachtmodus in')
-  nightToggle.title = isNight ? 'Schakel dagmodus in' : 'Schakel nachtmodus in'
-  nightToggle.classList.toggle('is-night', isNight)
-  document.body.classList.toggle('is-night', isNight)
-  room?.setNightMode(isNight)
+const floorButtons = [...document.querySelectorAll('.floor-arrow')]
+floorButtons.forEach(button => button.addEventListener('click', () => {
+  if (!room) return
+  const floor = Number(button.dataset.floor)
+  room.setFloor(floor)
+  floorButtons.forEach(option => option.setAttribute('aria-pressed', String(option === button)))
+  document.querySelector('#room-scene').setAttribute('aria-label', floor === 1 ? 'Bovenverdieping' : 'Benedenverdieping: woonkamer')
+}))
+
+const floorVisibilityToggle = document.querySelector('.floor-visibility-toggle')
+floorVisibilityToggle.addEventListener('click', () => {
+  const isVisible = floorVisibilityToggle.getAttribute('aria-pressed') !== 'true'
+  floorVisibilityToggle.setAttribute('aria-pressed', String(isVisible))
+  floorVisibilityToggle.setAttribute('aria-label', isVisible ? 'Verberg transparante verdieping' : 'Toon transparante verdieping')
+  floorVisibilityToggle.title = isVisible ? 'Verberg transparante verdieping' : 'Toon transparante verdieping'
+  room?.setOtherFloorVisible(isVisible)
 })
 
-const shopToggle = document.querySelector('.shop-toggle')
 const shopPanel = document.querySelector('.shop-panel')
 const shopClose = document.querySelector('.shop-close')
+const roomPreviewBack = document.querySelector('.room-preview-back')
+const sofaCustomizer = document.querySelector('#sofa-customizer')
+const sofaCustomizerClose = sofaCustomizer.querySelector('.sofa-customizer-close')
+const sofaBodyColor = sofaCustomizer.querySelector('#sofa-body-color')
+const sofaCushionColor = sofaCustomizer.querySelector('#sofa-cushion-color')
 const shopSelection = document.querySelector('.shop-selection')
 const shopCategories = document.querySelector('.shop-categories')
 const shopCatalogView = document.querySelector('.shop-catalog')
 const shopProducts = document.querySelector('.shop-products')
-const shopCount = document.querySelector('.shop-count')
+const shopControls = document.querySelector('.shop-controls')
+const shopPreview = document.querySelector('.shop-preview')
+const shopPreviewName = shopPreview.querySelector('.shop-preview-name')
+const furnitureSettings = new WeakMap()
+let furniturePreview = null
+
+function updateSofaCustomizer() {
+  const style = selectedFurnitureStyles.sofa || 'original'
+  const custom = customFurnitureColors.sofa || {}
+  const parts = new Map((room?.getThemeParts('sofa', style, custom) || []).map(part => [part.key, part.color]))
+  sofaBodyColor.value = custom.blue || parts.get('blue') || '#B0D4D2'
+  sofaCushionColor.value = custom.cushionYellow
+    || custom.olive
+    || parts.get('cushionYellow')
+    || '#F2C84B'
+  sofaCustomizer.querySelectorAll('[data-sofa-model]').forEach(button => {
+    const selected = button.dataset.sofaModel === selectedSofaModel
+    button.classList.toggle('is-selected', selected)
+    button.setAttribute('aria-pressed', String(selected))
+  })
+  sofaCustomizer.querySelectorAll('[data-cushion-shape]').forEach(button => {
+    const selected = button.dataset.cushionShape === selectedSofaCushionShape
+    button.classList.toggle('is-selected', selected)
+    button.setAttribute('aria-pressed', String(selected))
+  })
+}
+
+const furnitureCustomizer = document.querySelector('#furniture-customizer')
+const furnitureCustomizerColors = furnitureCustomizer.querySelector('.furniture-customizer-colors')
+const furnitureCustomizerModels = furnitureCustomizer.querySelector('.furniture-customizer-models')
+let customizingFurniture = null
+
+function getActiveModel(name) {
+  const models = furnitureCustomizers[name]?.models
+  if (!models) return null
+  return models.find(model => model.key === selectedFurnitureModels[name]) || models[0]
+}
+
+function openFurnitureCustomizer(name) {
+  if (name === 'sofa') return openSofaCustomizer()
+  const config = furnitureCustomizers[name]
+  if (!config || !shopPanel.hidden || !sofaCustomizer.hidden) return
+  if (customizingFurniture) closeFurnitureCustomizer()
+  if (!room) return
+  if (config.focus !== false && !room.focusFurniture(name)) return
+  pauseTutorial()
+  customizingFurniture = name
+  furnitureCustomizer.querySelector('#furniture-customizer-title').textContent = config.title
+  renderFurnitureCustomizer()
+  furnitureCustomizer.hidden = false
+  document.body.classList.add('is-sofa-customizing')
+  furnitureCustomizer.querySelector('.furniture-customizer-close').focus()
+}
+
+function renderFurnitureCustomizer() {
+  const name = customizingFurniture
+  const config = furnitureCustomizers[name]
+  const activeModel = getActiveModel(name)
+  // Modelkeuze: elk model als icoontje in een eigen kader
+  furnitureCustomizerModels.hidden = !config.models
+  furnitureCustomizerModels.replaceChildren(...(config.models ? [
+    Object.assign(document.createElement('legend'), { textContent: 'Model' }),
+    ...config.models.map(model => {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.className = model === activeModel ? 'is-selected' : ''
+      button.setAttribute('aria-pressed', String(model === activeModel))
+      button.innerHTML = `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${model.icon}</svg><span>${model.label}</span>`
+      button.addEventListener('click', () => {
+        if (!room?.setFurnitureModel(name, model.key)) return
+        selectedFurnitureModels[name] = model.key
+        try {
+          localStorage.setItem(FURNITURE_MODEL_STORAGE_KEY, JSON.stringify(selectedFurnitureModels))
+        } catch (error) {
+          console.error('Het meubelmodel kon niet worden opgeslagen.', error)
+        }
+        renderFurnitureCustomizer()
+      })
+      return button
+    }),
+  ] : []))
+
+  const style = selectedFurnitureStyles[name] || 'original'
+  const custom = customFurnitureColors[name] || {}
+  const colors = new Map((room?.getThemeParts(name, style, custom) || []).map(part => [part.key, part.color]))
+  const parts = activeModel ? activeModel.parts : config.parts
+  furnitureCustomizerColors.replaceChildren(...parts.map(([key, label]) => {
+    const control = document.createElement('label')
+    control.className = 'sofa-color-control'
+    control.textContent = label
+    const input = document.createElement('input')
+    input.type = 'color'
+    input.value = custom[key] || colors.get(key) || '#ffffff'
+    input.addEventListener('input', () => {
+      const updated = { ...(customFurnitureColors[name] || {}), [key]: input.value }
+      customFurnitureColors[name] = updated
+      saveCustomColors()
+      room?.setTheme(name, selectedFurnitureStyles[name] || 'original', updated)
+    })
+    control.append(input)
+    return control
+  }))
+}
+
+function closeFurnitureCustomizer() {
+  if (furnitureCustomizer.hidden) return
+  furnitureCustomizer.hidden = true
+  customizingFurniture = null
+  document.body.classList.remove('is-sofa-customizing')
+  room?.restoreSofaView()
+  resumeTutorial()
+}
+
+furnitureCustomizer.querySelector('.furniture-customizer-close').addEventListener('click', closeFurnitureCustomizer)
+furnitureCustomizer.querySelector('.furniture-customizer-reset').addEventListener('click', () => {
+  const name = customizingFurniture
+  if (!name) return
+  delete customFurnitureColors[name]
+  saveCustomColors()
+  room?.setTheme(name, selectedFurnitureStyles[name] || 'original')
+  renderFurnitureCustomizer()
+})
+
+function openSofaCustomizer() {
+  if (!shopPanel.hidden) return
+  closeFurnitureCustomizer()
+  if (!room?.focusSofa()) return
+  pauseTutorial()
+  updateSofaCustomizer()
+  sofaCustomizer.hidden = false
+  document.body.classList.add('is-sofa-customizing')
+  sofaCustomizerClose.focus()
+}
+
+function closeSofaCustomizer() {
+  if (sofaCustomizer.hidden) return
+  sofaCustomizer.hidden = true
+  document.body.classList.remove('is-sofa-customizing')
+  room?.restoreSofaView()
+  resumeTutorial()
+}
+
+
+function applySofaColor(keys, color, extraColors = {}) {
+  if (!room) return
+  const custom = { ...(customFurnitureColors.sofa || {}), ...extraColors }
+  keys.forEach(key => { custom[key] = color })
+  customFurnitureColors.sofa = custom
+  saveCustomColors()
+  room.setTheme('sofa', selectedFurnitureStyles.sofa || 'original', custom)
+}
+
+sofaBodyColor.addEventListener('input', () => applySofaColor(
+  ['blue', 'sky', 'sofaSeatCushion', 'sofaBackCushion'],
+  sofaBodyColor.value,
+))
+// De naad rond de sierkussens krijgt een donkerdere tint van dezelfde kleur,
+// zodat er niets van de oude kleur zichtbaar blijft.
+sofaCushionColor.addEventListener('input', () => applySofaColor(
+  ['cushionYellow', 'olive'],
+  sofaCushionColor.value,
+  { rugGold: darkenHex(sofaCushionColor.value), plantGreen: darkenHex(sofaCushionColor.value) },
+))
+sofaCustomizer.querySelectorAll('[data-sofa-model]').forEach(button => {
+  button.addEventListener('click', () => {
+    const model = button.dataset.sofaModel
+    if (!room?.setSofaModel(model)) return
+    selectedSofaModel = model
+    try {
+      localStorage.setItem(SOFA_MODEL_STORAGE_KEY, model)
+    } catch (error) {
+      console.error('Het sofamodel kon niet worden opgeslagen.', error)
+    }
+    updateSofaCustomizer()
+  })
+})
+sofaCustomizer.querySelectorAll('[data-cushion-shape]').forEach(button => {
+  button.addEventListener('click', () => {
+    const shape = button.dataset.cushionShape
+    if (!room?.setSofaCushionShape(shape)) return
+    selectedSofaCushionShape = shape
+    try {
+      localStorage.setItem(SOFA_CUSHION_SHAPE_STORAGE_KEY, shape)
+    } catch (error) {
+      console.error('De kussenvorm kon niet worden opgeslagen.', error)
+    }
+    updateSofaCustomizer()
+  })
+})
+sofaCustomizer.querySelector('.sofa-customizer-reset').addEventListener('click', () => {
+  delete customFurnitureColors.sofa
+  saveCustomColors()
+  room?.setTheme('sofa', selectedFurnitureStyles.sofa || 'original')
+  selectedSofaCushionShape = 'rounded'
+  room?.setSofaCushionShape(selectedSofaCushionShape)
+  try {
+    localStorage.setItem(SOFA_CUSHION_SHAPE_STORAGE_KEY, selectedSofaCushionShape)
+  } catch (error) {
+    console.error('De kussenvorm kon niet worden opgeslagen.', error)
+  }
+  updateSofaCustomizer()
+})
+sofaCustomizerClose.addEventListener('click', closeSofaCustomizer)
+
+function showFurniturePreview(name, themeGroup) {
+  if (!room?.createPreview) return
+  const selectedProduct = [...shopProducts.querySelectorAll('.shop-product')].find(card => card.dataset.name === name)
+  const settings = furnitureSettings.get(selectedProduct)
+  if (!settings) return
+  shopControls.replaceChildren(...settings)
+  shopControls.hidden = false
+  furniturePreview ??= room.createPreview(shopPreview.querySelector('.shop-preview-stage'))
+  shopPreview.hidden = false
+  shopPreviewName.textContent = name
+  furniturePreview.start()
+  furniturePreview.show(themeGroup, selectedFurnitureStyles[themeGroup] || 'original', customFurnitureColors[themeGroup] || {})
+  shopProducts.querySelectorAll('.shop-product').forEach(card => card.classList.toggle('is-active', card.dataset.name === name))
+}
+function hideFurniturePreview() {
+  shopPreview.hidden = true
+  shopControls.hidden = true
+  furniturePreview?.stop()
+}
 const timerToggle = document.querySelector('.timer-toggle')
 const timerPanel = document.querySelector('#timer-panel')
 const timerInput = document.querySelector('#timer-minutes')
@@ -234,8 +626,6 @@ const timerReset = document.querySelector('#timer-reset')
 const timerClose = document.querySelector('.timer-close')
 const timerAlert = document.querySelector('#timer-alert')
 const coinBalanceDisplay = document.querySelector('#coin-balance')
-const statsPanel = document.querySelector('#stats-panel')
-const statsClose = document.querySelector('.stats-close')
 const statsEmpty = document.querySelector('.stats-empty')
 const statsDemoBadge = document.querySelector('.stats-demo-badge')
 const statsWeekPrevious = document.querySelector('.stats-week-previous')
@@ -243,7 +633,6 @@ const statsWeekNext = document.querySelector('.stats-week-next')
 const statsWeekLabel = document.querySelector('.stats-week-label')
 const statsWeekTotal = document.querySelector('.stats-week-total-value')
 const statsChart = document.querySelector('.stats-chart')
-let cartCount = 0
 let remainingSeconds = 25 * 60
 let timerInterval = null
 let timerEndAt = null
@@ -429,7 +818,6 @@ function formatTimer(seconds) {
 
 function syncTimerDisplay() {
   const formattedTime = formatTimer(remainingSeconds)
-  room?.setWorking(Boolean(timerInterval))
   timerDisplay.textContent = formattedTime
   timerBadge.textContent = formattedTime
   timerBadge.hidden = !timerHasDisplay
@@ -445,41 +833,43 @@ function syncTimerDisplay() {
   }
 }
 
-function setShopOpen(isOpen) {
-  shopPanel.hidden = !isOpen
-  shopToggle.setAttribute('aria-expanded', String(isOpen))
-  shopToggle.setAttribute('aria-label', isOpen ? 'Winkel sluiten' : 'Winkel openen')
-  if (isOpen) {
-    if (!statsPanel.hidden) setStatsOpen(false)
-    timerPanel.hidden = true
-    timerToggle.setAttribute('aria-expanded', 'false')
-    const toggleBounds = shopToggle.getBoundingClientRect()
-    const panelBounds = shopPanel.getBoundingClientRect()
-    const left = Math.max(12, Math.min(toggleBounds.left, innerWidth - panelBounds.width - 12))
-    const aboveTop = toggleBounds.top - panelBounds.height - 12
-    const top = aboveTop >= 12
-      ? aboveTop
-      : Math.min(toggleBounds.bottom + 12, innerHeight - panelBounds.height - 12)
-    shopPanel.style.left = `${left}px`
-    shopPanel.style.top = `${Math.max(12, top)}px`
-    const focusTarget = shopCategories.hidden ? shopClose : shopPanel.querySelector('.shop-category')
-    focusTarget.focus()
-  }
-  else shopToggle.focus()
+function resetShopCategories() {
+  shopCatalogView.hidden = true
+  hideFurniturePreview()
+  shopCategories.classList.remove('has-selection')
+  shopPanel.querySelectorAll('.shop-category').forEach(category => {
+    category.setAttribute('aria-pressed', 'false')
+    category.classList.remove('is-selected')
+  })
+  shopSelection.textContent = 'Kies een categorie'
 }
 
-function setStatsOpen(isOpen) {
-  statsPanel.hidden = !isOpen
-  statsToggle.setAttribute('aria-expanded', String(isOpen))
-  statsToggle.setAttribute('aria-label', isOpen ? 'Dagelijkse timertijd sluiten' : 'Dagelijkse timertijd openen')
+function setRoomPreview(isOn) {
+  document.body.classList.toggle('is-room-preview', isOn)
+  if (isOn) roomPreviewBack.focus()
+  else shopPanel.querySelector('.furniture-preview-button')?.focus()
+}
+
+function setShopOpen(isOpen) {
   if (isOpen) {
-    if (!shopPanel.hidden) setShopOpen(false)
+    closeSofaCustomizer()
+    closeFurnitureCustomizer()
+  }
+  if (!isOpen) document.body.classList.remove('is-room-preview')
+  const wasOpen = !shopPanel.hidden
+  shopPanel.hidden = !isOpen
+  document.body.classList.toggle('is-shop-open', isOpen)
+  if (isOpen) pauseTutorial()
+  else if (wasOpen) resumeTutorial()
+  if (!isOpen) document.body.classList.remove('is-shop-page')
+  if (!isOpen) hideFurniturePreview()
+  if (isOpen) {
+    resetShopCategories()
+    document.body.classList.add('is-shop-page')
     timerPanel.hidden = true
     timerToggle.setAttribute('aria-expanded', 'false')
-    renderTimerStats()
-    statsClose.focus()
-  } else {
-    statsToggle.focus()
+    shopPanel.querySelector('[data-shop-category="furniture"]').click()
+    shopPanel.querySelector('[data-shop-category="furniture"]').focus()
   }
 }
 
@@ -492,27 +882,17 @@ function moveStatsWeek(amount) {
   renderTimerStats()
 }
 
-shopToggle.addEventListener('click', () => setShopOpen(shopPanel.hidden))
 shopClose.addEventListener('click', () => setShopOpen(false))
-statsToggle.addEventListener('click', () => setStatsOpen(statsPanel.hidden))
-statsClose.addEventListener('click', () => setStatsOpen(false))
+roomPreviewBack.addEventListener('click', () => setRoomPreview(false))
 statsWeekPrevious.addEventListener('click', () => moveStatsWeek(-1))
 statsWeekNext.addEventListener('click', () => moveStatsWeek(1))
 timerToggle.addEventListener('click', () => {
   const isOpen = timerPanel.hidden
   if (isOpen) {
     setShopOpen(false)
-    if (!statsPanel.hidden) setStatsOpen(false)
+    statsWeekStart = new Date(currentWeekStart)
+    renderTimerStats()
     timerPanel.hidden = false
-    const toggleBounds = timerToggle.getBoundingClientRect()
-    const panelBounds = timerPanel.getBoundingClientRect()
-    const left = Math.max(12, Math.min(toggleBounds.left, innerWidth - panelBounds.width - 12))
-    const aboveTop = toggleBounds.top - panelBounds.height - 12
-    const top = aboveTop >= 12
-      ? aboveTop
-      : Math.min(toggleBounds.bottom + 12, innerHeight - panelBounds.height - 12)
-    timerPanel.style.left = `${left}px`
-    timerPanel.style.top = `${Math.max(12, top)}px`
   }
   if (!isOpen) timerPanel.hidden = true
   timerToggle.setAttribute('aria-expanded', String(isOpen))
@@ -529,8 +909,40 @@ timerInput.addEventListener('input', () => {
   timerInput.value = String(minutes)
   remainingSeconds = minutes * 60
   timerHasDisplay = true
+  saveTimerState()
   syncTimerDisplay()
 })
+const TIMER_STATE_STORAGE_KEY = 'pixel-home-timer-state'
+function saveTimerState() {
+  try {
+    localStorage.setItem(TIMER_STATE_STORAGE_KEY, JSON.stringify({
+      minutes: Number(timerInput.value) || 25,
+      remainingSeconds,
+      endAt: timerEndAt,
+      trackingStartedAt,
+      hasDisplay: timerHasDisplay,
+    }))
+  } catch {
+    // Timer keeps running in memory if storage is unavailable.
+  }
+}
+
+function tickTimer() {
+  const currentTime = Date.now()
+  remainingSeconds = Math.max(0, Math.ceil((timerEndAt - currentTime) / 1000))
+  recordTimerUsage(Math.min(currentTime, timerEndAt), remainingSeconds === 0)
+  if (remainingSeconds === 0) {
+    clearInterval(timerInterval)
+    timerInterval = null
+    timerEndAt = null
+    trackingStartedAt = null
+    timerAlert.hidden = false
+  }
+  saveTimerState()
+  syncTimerDisplay()
+  if (!timerPanel.hidden) renderTimerStats()
+}
+
 timerStart.addEventListener('click', () => {
   if (timerInterval) {
     recordTimerUsage(Date.now(), true)
@@ -550,22 +962,9 @@ timerStart.addEventListener('click', () => {
     trackingStartedAt = startedAt
     lastUsageSavedAt = startedAt
     timerEndAt = startedAt + remainingSeconds * 1000
-    timerInterval = setInterval(() => {
-      const currentTime = Date.now()
-      remainingSeconds = Math.max(0, Math.ceil((timerEndAt - currentTime) / 1000))
-      const now = Math.min(currentTime, timerEndAt)
-      recordTimerUsage(now, remainingSeconds === 0)
-      if (remainingSeconds === 0) {
-        clearInterval(timerInterval)
-        timerInterval = null
-        timerEndAt = null
-        trackingStartedAt = null
-        timerAlert.hidden = false
-      }
-      syncTimerDisplay()
-      if (!statsPanel.hidden) renderTimerStats()
-    }, 250)
+    timerInterval = setInterval(tickTimer, 250)
   }
+  saveTimerState()
   syncTimerDisplay()
 })
 timerReset.addEventListener('click', () => {
@@ -577,6 +976,7 @@ timerReset.addEventListener('click', () => {
   timerAlert.hidden = true
   remainingSeconds = Number(timerInput.value) * 60
   timerHasDisplay = true
+  saveTimerState()
   syncTimerDisplay()
 })
 shopPanel.querySelectorAll('.shop-category').forEach(button => {
@@ -588,13 +988,67 @@ shopPanel.querySelectorAll('.shop-category').forEach(button => {
     const categoryName = button.dataset.shopCategory
     const categoryLabel = button.querySelector('span').textContent
     shopSelection.textContent = ''
-    shopCategories.hidden = true
+    shopCategories.classList.add('has-selection')
     shopCatalogView.hidden = false
+    hideFurniturePreview()
     shopCatalogView.querySelector('.shop-category-title').textContent = categoryLabel
-    shopProducts.replaceChildren(...shopItems[categoryName].map(([name, price, color]) => {
+    shopProducts.replaceChildren(...shopItems[categoryName].map(([name, price, color, themeGroup]) => {
       const item = document.createElement('article')
       item.className = 'shop-product'
-      item.innerHTML = `<span class="shop-product-art" style="--product-color:${color}" aria-hidden="true"></span><span class="shop-product-name">${name}</span><span class="shop-product-price">${price}</span><button class="add-to-cart" type="button" aria-label="Voeg ${name} toe aan winkelwagen" title="Toevoegen">+</button>`
+      item.dataset.name = name
+      const furnitureOptions = themeGroup
+        ? `<div class="furniture-options" role="group" aria-label="Kies een stijl voor ${name}">${furnitureStyles.map(([style, label]) => `
+            <button class="furniture-style-option${(selectedFurnitureStyles[themeGroup] || 'original') === style ? ' is-selected' : ''}" type="button" data-style="${style}" aria-pressed="${(selectedFurnitureStyles[themeGroup] || 'original') === style}">
+              <span class="theme-swatch theme-swatch--${style}" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span>${label}</span>
+            </button>`).join('')}
+          </div>
+          <button class="furniture-preview-button" type="button">Bekijk in kamer</button>`
+        : `<button class="add-to-cart" type="button" aria-label="Voeg ${name} toe aan winkelwagen" title="Toevoegen">+</button>`
+      const icon = themeGroup ? furnitureIcons[name] : foodIcons[name]
+      const art = icon
+        ? `<span class="shop-product-art shop-product-art--icon" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges">${icon}</svg></span>`
+        : `<span class="shop-product-art" style="--product-color:${color}" aria-hidden="true"></span>`
+      item.innerHTML = `${art}<span class="shop-product-name">${name}</span><span class="shop-product-price">${price}</span>${furnitureOptions}`
+      if (themeGroup) {
+        furnitureSettings.set(item, [
+          item.querySelector('.furniture-options'),
+          item.querySelector('.furniture-preview-button'),
+        ])
+        item.addEventListener('click', () => showFurniturePreview(name, themeGroup))
+        item.querySelector('.furniture-preview-button').addEventListener('click', event => {
+          event.stopPropagation()
+          setRoomPreview(true)
+        })
+        const styleOptions = [...item.querySelectorAll('.furniture-style-option')]
+        styleOptions.forEach(option => {
+          option.addEventListener('click', () => {
+            const style = option.dataset.style
+            if (!room) {
+              shopSelection.textContent = 'Meubelstijl kon niet worden toegepast'
+              return
+            }
+            delete customFurnitureColors[themeGroup]
+            saveCustomColors()
+            room.setTheme(themeGroup, style)
+            selectedFurnitureStyles[themeGroup] = style
+            try {
+              localStorage.setItem(FURNITURE_STYLE_STORAGE_KEY, JSON.stringify(selectedFurnitureStyles))
+            } catch (error) {
+              console.error('Meubelstijl kon niet worden opgeslagen.', error)
+            }
+            const label = furnitureStyles.find(([key]) => key === style)?.[1]
+            shopSelection.textContent = `${name} veranderd naar ${label}`
+            furniturePreview?.show(themeGroup, style, customFurnitureColors[themeGroup] || {})
+            styleOptions.forEach(styleOption => {
+              const isSelected = styleOption === option
+              styleOption.classList.toggle('is-selected', isSelected)
+              styleOption.setAttribute('aria-pressed', String(isSelected))
+            })
+          })
+        })
+        return item
+      }
       item.querySelector('.add-to-cart').addEventListener('click', event => {
         let productId
         if (categoryName === 'food') {
@@ -607,38 +1061,74 @@ shopPanel.querySelectorAll('.shop-category').forEach(button => {
           foodItems = room.getFoodItems()
           if (!feedMenu.hidden) renderFeedMenu()
         }
-        cartCount += 1
-        shopCount.textContent = String(cartCount)
-        shopCount.hidden = false
         event.currentTarget.classList.add('is-added')
         event.currentTarget.textContent = '✓'
         shopSelection.textContent = categoryName === 'food' ? `${name} in de koelkast` : `${name} toegevoegd`
       })
       return item
     }))
+    document.body.classList.add('is-shop-page')
+    if (categoryName === 'furniture') {
+      const first = shopItems.furniture[0]
+      showFurniturePreview(first[0], first[3])
+    }
   })
 })
 shopPanel.querySelector('.shop-back').addEventListener('click', () => {
   shopCatalogView.hidden = true
-  shopCategories.hidden = false
+  hideFurniturePreview()
+  shopCategories.classList.remove('has-selection')
   shopSelection.textContent = 'Kies een categorie'
 })
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !shopPanel.hidden) setShopOpen(false)
+  if (event.key === 'Escape' && !furnitureCustomizer.hidden) closeFurnitureCustomizer()
+  if (event.key === 'Escape' && !sofaCustomizer.hidden) closeSofaCustomizer()
+  else if (event.key === 'Escape' && document.body.classList.contains('is-room-preview')) setRoomPreview(false)
+  else if (event.key === 'Escape' && !shopPanel.hidden) setShopOpen(false)
   if (event.key === 'Escape' && !timerPanel.hidden) {
     timerPanel.hidden = true
     timerToggle.setAttribute('aria-expanded', 'false')
     timerToggle.focus()
   }
-  if (event.key === 'Escape' && !statsPanel.hidden) setStatsOpen(false)
   if (event.key === 'Escape' && !timerAlert.hidden) timerAlert.hidden = true
   if (event.key === 'Escape' && !feedMenu.hidden) feedMenu.hidden = true
 })
 
-window.addEventListener('pagehide', () => {
+function flushTimerData() {
   const now = timerEndAt === null ? Date.now() : Math.min(Date.now(), timerEndAt)
   recordTimerUsage(now, true)
+  saveTimerState()
+}
+window.addEventListener('pagehide', flushTimerData)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushTimerData()
+  else if (timerInterval) tickTimer()
 })
+
+try {
+  const saved = JSON.parse(localStorage.getItem(TIMER_STATE_STORAGE_KEY) || 'null')
+  if (saved && Number.isFinite(saved.remainingSeconds)) {
+    timerInput.value = String(Math.min(180, Math.max(1, Number(saved.minutes) || 25)))
+    remainingSeconds = Math.max(0, saved.remainingSeconds)
+    timerHasDisplay = Boolean(saved.hasDisplay)
+    if (Number.isFinite(saved.endAt) && Number.isFinite(saved.trackingStartedAt)) {
+      if (isDemoTimerUsage) {
+        timerUsage = {}
+        isDemoTimerUsage = false
+      }
+      trackingStartedAt = saved.trackingStartedAt
+      timerEndAt = saved.endAt
+      lastUsageSavedAt = 0
+      timerHasDisplay = true
+      timerAlert.hidden = false
+      timerInterval = setInterval(tickTimer, 250)
+      tickTimer()
+    }
+  }
+} catch (error) {
+  console.warn('Timerstatus kon niet worden geladen.', error)
+}
+syncTimerDisplay()
 
 feedMenu.querySelector('.feed-menu-close').addEventListener('click', () => { feedMenu.hidden = true })
 feedProducts.addEventListener('click', event => {
@@ -652,3 +1142,170 @@ feedProducts.addEventListener('click', event => {
 })
 
 if (import.meta.hot) import.meta.hot.dispose(() => room?.dispose())
+// Alleen in ontwikkeling (npm run dev): toegang voor de Playwright-tests, niet in de gebouwde site
+if (import.meta.env.DEV) window.__pixelHome = { room, openFurniture: openFurnitureCustomizer }
+
+// ---------- Intro & tutorial ----------
+const intro = document.querySelector('.intro')
+const introStepCount = intro.querySelector('.intro-step-count')
+const introTitle = intro.querySelector('#intro-title')
+const introText = intro.querySelector('.intro-text')
+const introAction = intro.querySelector('.intro-action')
+const introPrevious = intro.querySelector('.intro-previous')
+const introNext = intro.querySelector('.intro-next')
+const tutorialToggle = document.querySelector('.tutorial-toggle')
+const tutorialSteps = [
+  {
+    title: 'Welkom!',
+    text: 'Dit is jouw huisje en je mag het helemaal zelf inrichten zoals jij wilt. Ik laat je even zien hoe dat werkt.',
+  },
+  {
+    title: 'Rondkijken',
+    text: 'Sleep met je muis over het huis om het rond te draaien. Scroll om in en uit te zoomen. Verdwaald? Met het huisje-knopje linksboven zie je weer het hele huis.',
+    highlight: ['.view-reset'],
+  },
+  {
+    title: 'Kleuren aanpassen',
+    text: 'Klik op de sofa, het bureau of de keuken. Je kiest telkens uit drie totaal verschillende modellen en past de kleuren aan. Je ziet elke aanpassing meteen.',
+    furniture: ['sofa', 'desk', 'kitchen'],
+    action: ['Probeer het nu', () => openSofaCustomizer()],
+  },
+  {
+    title: 'Stijl kiezen',
+    text: 'Elk meubel heeft drie stijlen: Klassiek, Roze en Kleurrijk. Kies een stijl in de winkel en klik op "Bekijk in kamer" om het resultaat in je huis te zien.',
+    action: ['Bekijk de stijlen', () => setShopOpen(true)],
+  },
+  {
+    title: 'Verdiepingen',
+    text: 'Met de pijltjes ga je naar boven of naar beneden. Met het oogje toon of verberg je de doorzichtige verdieping.',
+    highlight: ['.floor-arrow', '.floor-visibility-toggle'],
+  },
+  {
+    title: 'Dag en nacht',
+    text: 'Klik op de zon of de maan om te kiezen of het dag of nacht is in je huis.',
+    highlight: ['.night-toggle'],
+  },
+  {
+    title: 'Veel plezier!',
+    text: 'Dat was het! Met het vraagteken linksboven bekijk je deze uitleg opnieuw.',
+    highlight: ['.tutorial-toggle'],
+  },
+]
+let tutorialStep = 0
+let tutorialPausedAt = null
+
+function clearTutorialHighlights() {
+  document.querySelectorAll('.is-tutorial-highlight').forEach(element => element.classList.remove('is-tutorial-highlight'))
+  room?.highlightFurniture(null)
+}
+
+function showTutorialStep(index) {
+  tutorialStep = clamp(index, 0, tutorialSteps.length - 1)
+  const step = tutorialSteps[tutorialStep]
+  clearTutorialHighlights()
+  introStepCount.textContent = `${tutorialStep + 1} / ${tutorialSteps.length}`
+  introTitle.textContent = step.title
+  introText.textContent = step.text
+  introAction.hidden = !step.action
+  if (step.action) introAction.textContent = step.action[0]
+  introPrevious.disabled = tutorialStep === 0
+  introNext.textContent = tutorialStep === tutorialSteps.length - 1 ? 'Starten' : 'Volgende'
+  step.highlight?.forEach(selector => {
+    document.querySelectorAll(selector).forEach(element => element.classList.add('is-tutorial-highlight'))
+  })
+  if (step.furniture) room?.highlightFurniture(step.furniture)
+}
+
+// Hoe het huis tijdens de uitleg verschuift (fractie van het scherm) en verkleint, per schermformaat
+function introViewShift() {
+  if (window.matchMedia('(max-width: 700px)').matches) return { x: 0, y: -0.07, scale: 0.9 }
+  if (window.matchMedia('(max-height: 500px)').matches) return { x: 0.2, y: 0, scale: 0.74 }
+  return { x: 0, y: 0, scale: 0.8 }
+}
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+window.addEventListener('resize', () => {
+  if (!intro.hidden) room?.setViewShift(introViewShift(), true)
+})
+
+function showIntro(step) {
+  intro.hidden = false
+  document.body.classList.add('is-intro')
+  room?.setViewShift(introViewShift(), reduceMotion)
+  showTutorialStep(step)
+  introNext.focus()
+}
+
+function hideIntro() {
+  clearTutorialHighlights()
+  intro.hidden = true
+  document.body.classList.remove('is-intro')
+  room?.setViewShift({}, reduceMotion)
+}
+
+function openTutorial() {
+  tutorialPausedAt = null
+  setShopOpen(false)
+  closeSofaCustomizer()
+  closeFurnitureCustomizer()
+  timerPanel.hidden = true
+  feedMenu.hidden = true
+  showIntro(0)
+}
+
+// Tijdens de tutorial iets uitproberen (sofa, winkel): tutorial even weg,
+// en na het sluiten gaat hij verder bij de volgende stap.
+function pauseTutorial() {
+  if (intro.hidden) return
+  const step = tutorialSteps[tutorialStep]
+  tutorialPausedAt = step.action || step.furniture ? tutorialStep + 1 : tutorialStep
+  hideIntro()
+}
+
+function resumeTutorial() {
+  if (tutorialPausedAt === null) return
+  const step = tutorialPausedAt
+  tutorialPausedAt = null
+  // Wacht tot de camera terug is voor het huis opzij schuift
+  window.setTimeout(() => {
+    if (sofaCustomizer.hidden && furnitureCustomizer.hidden && shopPanel.hidden && intro.hidden) showIntro(step)
+  }, 500)
+}
+
+function closeTutorial() {
+  tutorialPausedAt = null
+  if (intro.hidden) return
+  hideIntro()
+}
+
+introNext.addEventListener('click', () => {
+  if (tutorialStep === tutorialSteps.length - 1) closeTutorial()
+  else showTutorialStep(tutorialStep + 1)
+})
+introPrevious.addEventListener('click', () => showTutorialStep(tutorialStep - 1))
+intro.querySelector('.intro-skip').addEventListener('click', closeTutorial)
+introAction.addEventListener('click', () => {
+  const action = tutorialSteps[tutorialStep].action?.[1]
+  pauseTutorial()
+  // Wacht tot het huis terug op zijn plek staat voor we het paneel openen
+  window.setTimeout(() => {
+    action?.()
+    // Lukte het openen niet (bv. op de bovenverdieping)? Ga dan gewoon verder.
+    if (sofaCustomizer.hidden && furnitureCustomizer.hidden && shopPanel.hidden) resumeTutorial()
+  }, 450)
+})
+tutorialToggle.addEventListener('click', openTutorial)
+// Terug naar het hele huis: panelen sluiten en de camera terugzetten (handig als je te ver ingezoomd bent)
+document.querySelector('.view-reset').addEventListener('click', () => {
+  closeSofaCustomizer()
+  closeFurnitureCustomizer()
+  room?.resetView()
+})
+document.addEventListener('keydown', event => {
+  if (intro.hidden) return
+  if (event.key === 'Escape') closeTutorial()
+  else if (event.key === 'ArrowRight') introNext.click()
+  else if (event.key === 'ArrowLeft' && !introPrevious.disabled) introPrevious.click()
+})
+
+// De tutorial start bij elke keer laden (ook na een refresh)
+openTutorial()

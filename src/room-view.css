@@ -2,10 +2,12 @@
 html, body, #app { width: 100%; height: 100%; min-width: 320px; margin: 0; }
 body { overflow: hidden; background: #fff; }
 body { font-family: 'Press Start 2P', monospace; }
-#room-scene { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; background: #fff; touch-action: none; }
+#room-scene { width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; touch-action: none; }
 body.is-building-room #room-scene { width: calc(100vw - 300px); height: 100vh; height: 100dvh; margin-left: 300px; }
 #room-scene canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: grab; }
 #room-scene canvas:active { cursor: grabbing; }
+.belgian-clock { position: fixed; z-index: 6; top: 18px; left: 50%; transform: translateX(-50%); padding: 0; border: 0; background: transparent; color: #000; box-shadow: none; font: 700 24px/1 monospace; font-variant-numeric: tabular-nums; letter-spacing: 0.06em; white-space: nowrap; }
+body.is-night .belgian-clock { color: #fff; }
 .coin-display { position: fixed; z-index: 5; top: 16px; right: 16px; display: flex; min-width: 78px; height: 48px; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 5px; padding: 0 9px 0 4px; border: 0; background: transparent; box-shadow: none; }
 .coin-display svg { width: 40px; height: 40px; flex: 0 0 40px; overflow: visible; image-rendering: pixelated; filter: drop-shadow(0 2px 1px rgb(40 26 10 / 30%)); }
 .coin-balance { min-width: 30px; color: #75451F; font: 700 40px/1 monospace; text-align: right; }
@@ -13,27 +15,13 @@ body.is-building-room #room-scene { width: calc(100vw - 300px); height: 100vh; h
 .coin-face { fill: #F2C84B; }
 .coin-shine { fill: #FFE89A; }
 .coin-symbol { fill: #9B5D16; font: 700 16px/1 monospace; }
-.night-toggle { position: fixed; z-index: 5; top: 16px; left: 16px; display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #CBD5C5; border-radius: 3px; background: #fff; color: #302B25; box-shadow: 0 3px 0 #DCE3D7, 0 5px 12px rgb(48 43 37 / 14%); cursor: pointer; transition: transform 0.16s ease, background 0.2s ease, color 0.2s ease; }
-.night-toggle:hover { transform: translateY(-2px); }
-.night-toggle:focus-visible { outline: 3px solid #D87961; outline-offset: 3px; }
-.night-toggle svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.sun-icon { display: none; }
-.night-toggle.is-night { background: #202D45; color: #FFE8A3; }
-.night-toggle.is-night .moon-icon { display: none; }
-.night-toggle.is-night .sun-icon { display: block; }
-.shop-toggle { position: relative; z-index: 5; display: grid; width: 52px; height: 52px; flex: 0 0 52px; place-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; color: #A96A32; cursor: pointer; image-rendering: pixelated; transition: color 0.16s ease; }
-.shop-toggle:hover { color: #75451F; }
-.shop-toggle:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
-.shop-toggle svg { width: 46px; height: 46px; fill: currentColor; shape-rendering: crispEdges; image-rendering: pixelated; }
-.shop-pixel-cart-frame, .shop-pixel-cart-wheel { fill: #A96A32; }
-.shop-pixel-cart-basket { fill: #F2C84B; }
-.shop-toggle .shop-count { position: absolute; top: -2px; right: 0; display: grid; min-width: 16px; height: 16px; place-items: center; padding: 0 3px; border: 2px solid #75451F; background: #F5D36F; color: #302B25; font: 700 8px/1 monospace; }
-.shop-toggle .shop-count[hidden] { display: none; }
-body.is-night .shop-toggle { background: transparent; color: #D49A58; }
-body.is-night .shop-toggle:hover { color: #F1C879; }
-body.is-night .shop-pixel-cart-frame, body.is-night .shop-pixel-cart-wheel { fill: #75451F; }
-body.is-night .shop-pixel-cart-basket { fill: #F2C84B; }
-body.is-night .shop-toggle .shop-count { border-color: #75451F; background: #F5D36F; color: #302B25; }
+.night-toggle { display: grid; place-items: center; }
+.night-toggle svg { width: 23px; height: 23px; fill: currentColor; stroke: none; shape-rendering: crispEdges; image-rendering: pixelated; }
+.night-moon-icon { display: none; }
+.night-toggle .sun-edge, .night-toggle .moon-edge { fill: #F2A51A; }
+.night-toggle .sun-light, .night-toggle .moon-light { fill: #FFD93D; }
+.night-toggle.is-night .day-sun-icon { display: none; }
+.night-toggle.is-night .night-moon-icon { display: block; }
 .timer-toggle { position: relative; z-index: 5; display: grid; width: 52px; height: 52px; flex: 0 0 52px; place-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; color: #1685D1; cursor: pointer; image-rendering: pixelated; transition: color 0.16s ease; }
 .timer-toggle:hover { color: #075FA8; }
 .timer-toggle:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
@@ -42,18 +30,9 @@ body.is-night .shop-toggle .shop-count { border-color: #75451F; background: #F5D
 .timer-badge { position: absolute; right: -10px; bottom: -10px; min-width: 42px; padding: 4px; border: 2px solid #123B70; border-radius: 0; background: #DCEFFF; color: #123B70; font: 700 8px/1 monospace; text-align: center; }
 body.is-night .timer-toggle { background: transparent; color: #59B8F3; }
 body.is-night .timer-badge { border-color: #123B70; background: #DCEFFF; color: #123B70; }
-.stats-toggle { position: relative; z-index: 5; display: grid; width: 52px; height: 52px; flex: 0 0 52px; place-items: center; padding: 0; border: 0; border-radius: 0; background: transparent; color: #4D9A45; cursor: pointer; image-rendering: pixelated; transition: color 0.16s ease; }
-.stats-toggle:hover { color: #347A30; }
-.stats-toggle:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
-.stats-toggle svg { width: 52px; height: 52px; fill: currentColor; shape-rendering: crispEdges; image-rendering: pixelated; }
-.stats-pixel-bars { fill: #65A98C; stroke: #347B7F; stroke-width: 1; stroke-linejoin: miter; }
-.stats-pixel-bar-light { fill: #A7D4BA; }
-body.is-night .stats-toggle { background: transparent; color: #77C96D; }
-body.is-night .stats-pixel-bars { fill: #65A98C; stroke: #347B7F; }
-body.is-night .stats-pixel-bar-light { fill: #A7D4BA; }
 .shop-panel { position: fixed; z-index: 6; top: 124px; left: 16px; width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 148px); overflow-y: auto; padding: 14px; border: 1px solid #CBD5C5; border-radius: 3px; background: rgb(255 255 255 / 97%); box-shadow: 0 4px 0 #DCE3D7, 0 8px 24px rgb(48 43 37 / 20%); color: #302B25; backdrop-filter: blur(10px); }
 .shop-panel[hidden] { display: none; }
-.timer-panel { position: fixed; z-index: 8; top: 178px; left: clamp(16px, 6vw, 76px); display: grid; width: min(260px, calc(100vw - 32px)); max-height: calc(100dvh - 190px); gap: 12px; overflow-y: auto; padding: 14px; border: 1px solid #CBD5C5; border-radius: 3px; background: rgb(255 255 255 / 97%); box-shadow: 0 4px 0 #DCE3D7, 0 8px 24px rgb(48 43 37 / 20%); color: #302B25; backdrop-filter: blur(10px); }
+.timer-panel { position: fixed; z-index: 8; top: 178px; left: clamp(16px, 6vw, 76px); display: grid; width: min(340px, calc(100vw - 32px)); max-height: calc(100dvh - 190px); gap: 12px; overflow-y: auto; padding: 14px; border: 1px solid #CBD5C5; border-radius: 3px; background: rgb(255 255 255 / 97%); box-shadow: 0 4px 0 #DCE3D7, 0 8px 24px rgb(48 43 37 / 20%); color: #302B25; backdrop-filter: blur(10px); }
 .timer-panel[hidden] { display: none; }
 .timer-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
 .timer-heading h2 { margin: 0; font: 700 12px/1.5 monospace; }
@@ -67,55 +46,39 @@ body.is-night .stats-pixel-bar-light { fill: #A7D4BA; }
 .timer-panel .timer-actions button:focus-visible, .timer-close:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
 body.is-night .timer-panel { border-color: #4A566C; background: rgb(24 36 58 / 96%); color: #F2E7D2; }
 body.is-night .timer-close, body.is-night .timer-panel .timer-input, body.is-night .timer-panel .timer-actions button { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
-.stats-panel { position: fixed; z-index: 10; inset: 0; display: grid; grid-template-rows: auto; align-content: start; gap: 24px; overflow-y: auto; padding: 28px clamp(20px, 6vw, 88px); background: #fff; color: #302B25; }
-.stats-panel[hidden] { display: none; }
-.stats-heading { display: flex; width: min(1040px, 100%); align-items: center; justify-content: space-between; margin: 0 auto; padding-bottom: 16px; border-bottom: 1px solid #CBD5C5; }
-.stats-title-group { display: flex; align-items: center; gap: 12px; }
-.stats-heading h2 { margin: 0; font: 700 20px/1.4 monospace; }
-.stats-demo-badge { padding: 4px 6px; border: 1px solid #CBD5C5; border-radius: 2px; color: #65754F; font: 700 9px/1.3 monospace; }
-.stats-close { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: inherit; cursor: pointer; font: 400 20px/1 monospace; }
-.stats-close:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
-.stats-week-toolbar { display: flex; width: min(1040px, 100%); align-items: center; justify-content: space-between; gap: 16px; margin: 0 auto; }
-.stats-week-controls { display: flex; align-items: center; gap: 10px; }
-.stats-week-button { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: inherit; cursor: pointer; }
+.stats-section { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid #CBD5C5; }
+.stats-title-group { display: flex; align-items: center; gap: 8px; }
+.stats-section h3 { margin: 0; font: 700 11px/1.4 monospace; }
+.stats-demo-badge { padding: 3px 5px; border: 1px solid #CBD5C5; border-radius: 2px; color: #65754F; font: 700 8px/1.3 monospace; }
+.stats-demo-badge[hidden] { display: none; }
+.stats-week-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.stats-week-controls { display: flex; align-items: center; gap: 6px; }
+.stats-week-button { display: grid; width: 28px; height: 28px; flex: 0 0 auto; place-items: center; padding: 0; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: inherit; cursor: pointer; }
 .stats-week-button:hover:not(:disabled) { background: #F7F8F3; }
 .stats-week-button:disabled { cursor: default; opacity: 0.42; }
 .stats-week-button:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
-.stats-week-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.stats-week-label { min-width: 190px; color: #302B25; font: 600 11px/1.4 monospace; text-align: center; }
-.stats-week-total { display: flex; align-items: center; gap: 8px; margin: 0; color: #777267; font: 500 11px/1.4 monospace; }
-.stats-week-total-value { color: #302B25; font: 700 14px/1.4 monospace; }
-.stats-empty { width: min(1040px, 100%); margin: 0 auto; color: #777267; font: 400 12px/1.5 monospace; }
-.stats-chart { display: grid; width: min(1040px, 100%); height: min(52vh, 420px); min-height: 220px; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: stretch; gap: clamp(6px, 1.8vw, 20px); margin: 0 auto; }
-.stats-day { display: grid; min-width: 0; grid-template-rows: auto minmax(0, 1fr) auto; justify-items: center; gap: 12px; font: 500 10px/1.4 monospace; }
+.stats-week-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.stats-week-label { color: #302B25; font: 600 9px/1.4 monospace; text-align: center; }
+.stats-week-total { display: flex; align-items: center; gap: 6px; margin: 0; color: #777267; font: 500 9px/1.4 monospace; }
+.stats-week-total-value { color: #302B25; font: 700 10px/1.4 monospace; }
+.stats-empty { margin: 0; color: #777267; font: 400 10px/1.5 monospace; }
+.stats-empty[hidden] { display: none; }
+.stats-chart { display: grid; height: 130px; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: stretch; gap: 4px; }
+.stats-day { display: grid; min-width: 0; grid-template-rows: auto minmax(0, 1fr) auto; justify-items: center; gap: 4px; font: 500 8px/1.4 monospace; }
 .stats-day-duration { font-weight: 700; }
-.stats-day-track { display: flex; width: min(100%, 56px); height: 100%; align-items: end; overflow: hidden; border-radius: 2px 2px 0 0; background: #E5E9E0; }
+.stats-day-label { text-align: center; }
+.stats-day-track { display: flex; width: min(100%, 26px); height: 100%; align-items: end; overflow: hidden; border-radius: 2px 2px 0 0; background: #E5E9E0; }
 .stats-day-fill { display: block; width: 100%; background: #839573; }
-body.is-night .stats-panel { background: #101A2A; color: #F2E7D2; }
-body.is-night .stats-heading { border-color: #4A566C; }
+body.is-night .stats-section { border-color: #4A566C; }
 body.is-night .stats-demo-badge { border-color: #4A566C; color: #C8D4A7; }
-body.is-night .stats-close { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
 body.is-night .stats-week-button { border-color: #4A566C; background: #202D45; }
 body.is-night .stats-week-button:hover:not(:disabled) { background: #2C405C; }
 body.is-night .stats-week-label, body.is-night .stats-week-total-value { color: #F2E7D2; }
-body.is-night .stats-empty { color: #BEC6D0; }
+body.is-night .stats-week-total, body.is-night .stats-empty { color: #BEC6D0; }
 body.is-night .stats-day-track { background: #34455E; }
 body.is-night .stats-day-fill { background: #C8D4A7; }
 @media (max-width: 560px) {
-	.stats-panel { gap: 18px; padding: 20px 16px; }
-	.stats-heading h2 { font-size: 15px; }
-	.stats-title-group { gap: 7px; }
-	.stats-demo-badge { padding: 3px 4px; font-size: 7px; }
-	.stats-week-toolbar { flex-wrap: wrap; gap: 10px; }
-	.stats-week-controls { gap: 6px; }
-	.stats-week-button { width: 34px; height: 34px; }
-	.stats-week-label { min-width: 0; font-size: 9px; }
-	.stats-week-total { font-size: 9px; }
-	.stats-week-total-value { font-size: 11px; }
-	.stats-chart { height: min(42vh, 320px); min-height: 180px; gap: 4px; }
-	.stats-day { gap: 8px 4px; font-size: 8px; }
-	.stats-day-duration, .stats-day-label { font-size: 8px; }
-	.stats-day-track { width: min(100%, 34px); }
+	.timer-panel { left: 12px; width: calc(100vw - 24px); max-width: 340px; }
 }
 .timer-alert { position: fixed; z-index: 9; top: 16px; left: calc(50% - 6.25dvh); display: flex; max-width: calc(100vw - 124px); align-items: center; gap: 10px; padding: 0; transform: translateX(-50%); border: 0; background: transparent; box-shadow: none; color: #302B25; font: 700 12px/1.4 monospace; white-space: nowrap; }
 .timer-alert[hidden] { display: none; }
@@ -140,6 +103,12 @@ body.is-night .timer-alert { color: #F2E7D2; }
 .shop-product-art { grid-column: 1; grid-row: 1 / span 2; width: 28px; height: 28px; border-radius: 2px; background: var(--product-color); box-shadow: inset 0 -5px rgb(48 43 37 / 10%); }
 .shop-product-name { overflow: hidden; grid-column: 2; grid-row: 1; font: 600 9px/1.3 monospace; text-overflow: ellipsis; white-space: nowrap; }
 .shop-product-price { grid-column: 2; grid-row: 2; color: #777267; font: 500 9px/1.3 monospace; }
+.furniture-options { display: grid; grid-column: 1 / -1; grid-row: 3; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; margin-top: 3px; }
+.furniture-style-option { display: grid; min-width: 0; justify-items: center; gap: 3px; padding: 4px 1px; border: 1px solid transparent; border-radius: 2px; background: #fff; color: #302B25; cursor: pointer; font: 500 7px/1.3 monospace; }
+.furniture-style-option:hover { background: #F7F8F3; }
+.furniture-style-option.is-selected { border-color: #8A9B7B; background: #F7F8F3; box-shadow: inset 0 -2px #C4D0B9; }
+.furniture-style-option .theme-swatch { width: 24px; height: 10px; }
+.furniture-style-option:focus-visible { outline: 3px solid #D87961; outline-offset: 1px; }
 .add-to-cart { display: grid; width: 25px; height: 25px; grid-column: 3; grid-row: 1 / span 2; place-items: center; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: #302B25; cursor: pointer; font: 700 15px/1 monospace; }
 .add-to-cart:hover, .add-to-cart.is-added { border-color: #839573; background: #F0F3EA; }
 .shop-back:focus-visible, .add-to-cart:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
@@ -154,6 +123,8 @@ body.is-night .timer-alert { color: #F2E7D2; }
 .feed-product { display: grid; min-height: 40px; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 5px 7px; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: #302B25; cursor: pointer; text-align: left; }
 .feed-product:hover { border-color: #8A9B7B; background: #F7F8F3; }
 .feed-product-icon { width: 20px; height: 20px; border-radius: 50%; background: var(--product-color); box-shadow: inset 0 -4px rgb(48 43 37 / 10%); }
+.feed-product-icon--art { display: grid; place-items: center; border-radius: 0; background: transparent; box-shadow: none; }
+.feed-product-icon--art svg { display: block; width: 20px; height: 20px; image-rendering: pixelated; }
 .feed-product-name { font: 600 9px/1.3 monospace; }
 .feed-product-action { color: #65754F; font: 700 8px/1.3 monospace; }
 .feed-product:focus-visible, .feed-menu-close:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
@@ -165,7 +136,8 @@ body.is-night .shop-panel { border-color: #4A566C; background: rgb(24 36 58 / 96
 body.is-night .shop-close, body.is-night .shop-category { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
 body.is-night .shop-category.is-selected { background: #2C405C; box-shadow: inset 0 -3px #71859E; }
 body.is-night .shop-product { border-color: #4A566C; background: #202D45; }
-body.is-night .shop-back, body.is-night .add-to-cart { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
+body.is-night .shop-back, body.is-night .add-to-cart, body.is-night .furniture-style-option { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
+body.is-night .furniture-style-option:hover, body.is-night .furniture-style-option.is-selected { background: #2C405C; }
 body.is-night .shop-product-price { color: #BEC6D0; }
 body.is-night .shop-selection { color: #BEC6D0; }
 body.is-night { background: #101A2A; }
@@ -174,24 +146,17 @@ body.is-night { background: #101A2A; }
 .character-hotspot[hidden] { display: none; }
 .character-hotspot:hover { background: transparent; }
 .character-hotspot:focus-visible { outline: 3px solid #D87961; outline-offset: 2px; }
-.hunger-status { position: fixed; z-index: 4; right: 0; bottom: 18px; left: 0; display: grid; grid-template-columns: repeat(7, 52px); align-items: center; justify-content: center; justify-items: center; pointer-events: none; }
-.hunger-status > svg { width: 34px; height: 34px; }
-.hunger-status > .timer-toggle svg { width: 34px; height: 34px; }
-.hunger-status > .stats-toggle svg { width: 46px; height: 46px; }
-.hunger-status > .shop-toggle svg { width: 46px; height: 46px; }
-.hunger-status > .night-toggle { position: relative; top: auto; left: auto; width: 52px; height: 52px; flex: 0 0 52px; border: 0; border-radius: 0; background: transparent; color: #000; box-shadow: none; }
-.hunger-status > .night-toggle:hover { transform: none; color: #000; }
-.hunger-status > .night-toggle svg { width: 32px; height: 32px; fill: currentColor; stroke: none; shape-rendering: crispEdges; image-rendering: pixelated; }
-.hunger-status > .night-toggle .moon-icon > path:first-child { fill-rule: evenodd; }
-.hunger-status > .night-toggle.is-night { background: transparent; color: #000; }
-.hunger-status > button { pointer-events: auto; }
-.hunger-status svg { width: 34px; height: 34px; overflow: visible; image-rendering: pixelated; filter: drop-shadow(0 1px 1px rgb(40 26 10 / 25%)); }
-.heart-empty { fill: #F6A5A5; }
-.heart-fill { fill: #E5232E; transition: y 0.35s ease, height 0.35s ease; }
-.heart-outline { fill: none; stroke: #A91520; stroke-linejoin: miter; stroke-width: 1.5; }
-body.is-night .heart-empty { fill: #F6A5A5; }
-body.is-night .heart-fill { fill: #E5232E; }
-body.is-night .heart-outline { stroke: #A91520; }
+.hunger-status { position: fixed; z-index: 4; right: 0; bottom: 18px; left: 0; display: grid; grid-template-columns: repeat(4, 65px); align-items: center; justify-content: center; justify-items: center; pointer-events: none; }
+.hunger-status > svg { width: 42.5px; height: 42.5px; }
+.hunger-status > .timer-toggle svg { width: 38.6px; height: 38.6px; transform: translateY(1.6px); }
+.hunger-status > button { width: 65px; height: 65px; flex-basis: 65px; pointer-events: auto; }
+.hunger-status svg { width: 42.5px; height: 42.5px; overflow: visible; image-rendering: pixelated; filter: drop-shadow(0 1px 1px rgb(40 26 10 / 25%)); }
+.bread-crust { fill: #A96A32; }
+.bread-crumb-empty { fill: #D8C7A5; }
+.bread-fill { fill: #FFE4A3; transition: y 0.35s ease, height 0.35s ease; }
+body.is-night .bread-crust { fill: #75451F; }
+body.is-night .bread-crumb-empty { fill: #8E8068; }
+body.is-night .bread-fill { fill: #D9B86F; }
 #feed-man { flex: 0 0 auto; padding: 5px 7px; border: 1px solid #CBD5C5; border-radius: 2px; background: #fff; color: #302B25; cursor: pointer; font: 600 8px/1.3 monospace; }
 #feed-man:hover:not(:disabled) { border-color: #839573; background: #F0F3EA; }
 #feed-man:disabled { color: #aaa69e; cursor: default; opacity: 0.7; }
@@ -200,8 +165,6 @@ body.is-night #feed-man { border-color: #4A566C; background: #202D45; color: #F2
 body.is-night #feed-man:disabled { color: #8993A3; }
 @media (max-width: 560px) {
 	.shop-panel { top: 124px; left: 12px; width: calc(100vw - 24px); max-width: 360px; }
-	.stats-panel { gap: 20px; padding: 20px 16px; }
-	.stats-heading h2 { font-size: 15px; }
 }
 .room-error { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 24px; color: #1D0A0A; text-align: center; }
 .entry-screen { position: fixed; z-index: 2; inset: 0; display: grid; place-items: center; background: #fff; transition: opacity 0.35s ease, visibility 0.35s ease, background 0.25s ease; }
@@ -316,3 +279,866 @@ body.is-night #feed-man:disabled { color: #8993A3; }
 	.reset-themes { min-height: 34px; align-self: end; padding: 7px 10px; font-size: 9px; }
 	#room-scene { grid-column: 1; grid-row: 1; }
 }
+@media (min-width: 701px) {
+	body.is-shop-open { --shop-width: clamp(260px, 24vw, 320px); }
+	body.is-shop-open #room-scene { width: calc(100% - var(--shop-width)); }
+	body.is-shop-open .hunger-status { right: var(--shop-width); }
+	body.is-shop-open .shop-panel { top: 0 !important; right: 0; bottom: 0; left: auto !important; width: var(--shop-width); max-width: none; max-height: none; box-sizing: border-box; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -4px 0 0 #DCE3D7; }
+}
+.shop-categories.has-selection { grid-template-columns: 1fr; margin-bottom: 10px; }
+.shop-categories.has-selection .shop-category:not(.is-selected) { display: none; }
+.shop-product-art--icon { background: transparent; box-shadow: none; }
+.shop-product-art--icon svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.shop-product:has(.shop-product-art--icon) { grid-template-columns: 42px minmax(0, 1fr) 25px; }
+.shop-product-art--icon { width: 40px; height: 40px; }
+
+.timer-panel { inset: 0; z-index: 10; width: auto; max-width: none; max-height: none; align-content: start; gap: 22px; padding: 40px max(20px, calc((100vw - 720px) / 2)); border: 0; border-radius: 0; background: #fff; box-shadow: none; backdrop-filter: none; }
+.timer-panel .timer-heading h2 { font-size: 20px; }
+.timer-panel .timer-close { width: 44px; height: 44px; font-size: 28px; }
+.timer-panel .timer-duration { grid-template-columns: 1fr 96px; font-size: 14px; }
+.timer-panel .timer-input { width: 96px; padding: 10px 6px; font-size: 16px; }
+.timer-panel .timer-display { padding: 18px 4px; font-size: 72px; }
+.timer-panel .timer-actions { gap: 10px; }
+.timer-panel .timer-actions button { min-height: 52px; font-size: 13px; }
+.timer-panel .stats-section { gap: 16px; padding-top: 24px; }
+.timer-panel .stats-section h3 { font-size: 16px; }
+.timer-panel .stats-week-label { font-size: 12px; }
+.timer-panel .stats-week-total, .timer-panel .stats-empty { font-size: 12px; }
+.timer-panel .stats-week-total-value { font-size: 14px; }
+.timer-panel .stats-week-button { width: 36px; height: 36px; }
+.timer-panel .stats-chart { height: min(38dvh, 320px); gap: 10px; }
+.timer-panel .stats-day { font-size: 11px; }
+.timer-panel .stats-day-track { width: min(100%, 48px); }
+body.is-night .timer-panel { background: #18243A; }
+@media (max-width: 560px) {
+	.timer-panel { inset: 0; left: 0; width: auto; max-width: none; padding: 24px 16px; }
+	.timer-panel .timer-display { font-size: 52px; }
+}
+@media (max-height: 820px) {
+	.timer-panel { gap: 12px; padding-top: 20px; padding-bottom: 20px; }
+	.timer-panel .timer-display { padding: 4px; font-size: 56px; }
+	.timer-panel .timer-actions button { min-height: 44px; }
+	.timer-panel .stats-section { gap: 10px; padding-top: 14px; }
+	.timer-panel .stats-chart { height: min(24dvh, 200px); }
+}
+@media (min-width: 701px) {
+	body.is-shop-open:has(.shop-category[data-shop-category="furniture"].is-selected) { --shop-width: max(33.333vw, 300px); }
+	body.is-shop-open:has(.shop-category[data-shop-category="food"].is-selected) { --shop-width: max(25vw, 240px); }
+	body.is-shop-open:has(.shop-category[data-shop-category="food"].is-selected) .shop-products { grid-template-columns: 1fr; }
+	.shop-panel { transition: width 0.2s ease; }
+}
+
+.shop-preview { margin-top: 10px; display: grid; gap: 4px; justify-items: center; padding: 8px; border: 1px solid #C9D3C2; background: rgba(255, 255, 255, 0.55); }
+.shop-preview[hidden] { display: none; }
+.shop-preview-stage { width: 100%; height: 170px; }
+.shop-preview-stage canvas { display: block; }
+.shop-preview-name { font-weight: 700; font-size: 13px; }
+.shop-product { cursor: pointer; }
+.shop-product.is-active { outline: 2px solid #6F8F5B; outline-offset: -2px; }
+.shop-preview { position: sticky; bottom: -14px; z-index: 1; margin-bottom: -14px; background: rgb(247 249 244 / 98%); }
+.shop-preview-stage { height: 150px; }
+.shop-preview { border: 0; background: #fff; box-shadow: 0 -10px 10px -4px #fff; }
+.shop-preview-stage { height: clamp(130px, 34dvh, 300px); }
+
+@media (max-width: 700px) {
+	body.is-shop-open .shop-panel { top: auto !important; right: 0; bottom: 0; left: 0 !important; width: auto; max-width: none; max-height: 56dvh; box-sizing: border-box; border-width: 1px 0 0; border-radius: 0; }
+	body.is-shop-open #room-scene { height: 44dvh; }
+	.shop-preview-stage { height: clamp(90px, 18dvh, 180px); }
+	.shop-categories.has-selection { display: none; }
+	.shop-heading { margin-bottom: 6px; }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+	.shop-preview-stage { height: 120px; }
+}
+
+.furniture-custom { grid-column: 1 / -1; margin-top: 4px; font: 500 8px/1.3 monospace; }
+.furniture-custom summary { padding: 4px 2px; cursor: pointer; }
+.furniture-parts { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 4px; padding: 4px 0; }
+.furniture-part { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.furniture-part span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.furniture-part input { width: 22px; height: 22px; flex: none; padding: 0; border: 1px solid #8A9B7B; border-radius: 2px; background: none; cursor: pointer; }
+.furniture-reset { padding: 4px 6px; border: 1px solid #8A9B7B; border-radius: 2px; background: #fff; color: inherit; font: inherit; cursor: pointer; }
+body.is-night .furniture-reset, body.is-night .furniture-part input { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
+
+/* Meubelwinkel als volledige pagina */
+body.is-shop-page { --shop-width: 0px !important; }
+body.is-shop-page #room-scene { width: 100% !important; height: 100% !important; }
+body.is-shop-page .shop-panel { inset: 0 !important; z-index: 9; width: auto !important; max-width: none !important; max-height: none !important; box-sizing: border-box; padding: 28px max(16px, calc((100vw - 1100px) / 2)) 0; border: 0 !important; border-radius: 0 !important; background: #fff; box-shadow: none !important; }
+body.is-shop-page .shop-selection, body.is-shop-page .shop-categories.has-selection { display: none; }
+body.is-shop-page .shop-categories:not(.has-selection) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin-top: 12px; }
+body.is-shop-page .shop-categories:not(.has-selection) .shop-category { min-height: 120px; font-size: 18px; }
+body.is-shop-page .shop-heading h2 { font-size: 20px; }
+body.is-shop-page .shop-close { width: 44px; height: 44px; font-size: 28px; }
+body.is-shop-page .shop-products { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+body.is-shop-page .shop-product { padding: 14px; font-size: 14px; }
+body.is-shop-page .shop-product:has(.shop-product-art--icon) { grid-template-columns: 56px minmax(0, 1fr) auto; }
+body.is-shop-page .shop-product-art--icon { width: 56px; height: 56px; }
+body.is-shop-page .furniture-style-option { font-size: 10px; padding: 6px 2px; }
+body.is-shop-page .furniture-custom { font-size: 11px; }
+body.is-shop-page .furniture-part input { width: 28px; height: 28px; }
+.furniture-preview-button { grid-column: 1 / -1; padding: 8px; border: 1px solid #8A9B7B; border-radius: 2px; background: #F7F8F3; color: inherit; font: 700 11px/1 monospace; cursor: pointer; box-shadow: inset 0 -2px #C4D0B9; }
+.furniture-preview-button:hover { background: #EDF1E8; }
+body.is-night .furniture-preview-button { border-color: #4A566C; background: #202D45; color: #F2E7D2; }
+body.is-night.is-shop-page .shop-panel { background: #18243A; }
+
+body.is-shop-page .shop-panel { display: flex; flex-direction: column; }
+body.is-shop-page .shop-catalog { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+body.is-shop-page .shop-catalog[hidden] { display: none; }
+body.is-shop-page .shop-products { padding-bottom: 16px; }
+body.is-shop-page .shop-preview { position: sticky; bottom: 0; z-index: 2; margin: auto 0 0; padding: 8px 0 12px; border: 0; background: #fff; box-shadow: 0 -12px 12px -6px #fff; }
+body.is-shop-page .shop-preview[hidden] { display: none; }
+body.is-shop-page .shop-preview-stage { height: clamp(130px, 28dvh, 260px); }
+body.is-shop-page .shop-preview-name { font-size: 16px; }
+body.is-night.is-shop-page .shop-preview { background: #18243A; box-shadow: 0 -12px 12px -6px #18243A; }
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-products { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.room-preview-back { display: none; }
+body.is-room-preview .shop-panel { display: none; }
+body.is-room-preview .room-preview-back { position: fixed; z-index: 11; top: 16px; left: 16px; display: block; min-height: 44px; padding: 10px 16px; border: 1px solid #8A9B7B; border-radius: 3px; background: #fff; color: #302B25; font: 700 13px/1 monospace; cursor: pointer; box-shadow: 0 3px 0 #C4D0B9; }
+body.is-night .room-preview-back { border-color: #4A566C; background: #202D45; color: #F2E7D2; box-shadow: none; }
+
+body.is-shop-page .shop-panel { overflow: hidden; padding-bottom: 0; }
+body.is-shop-page .shop-products, body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-products { flex: 1; min-height: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; overflow-x: auto; overflow-y: auto; scroll-snap-type: x proximity; padding-bottom: 12px; }
+body.is-shop-page .shop-products > .shop-product { flex: 0 0 min(280px, 80vw); scroll-snap-align: start; }
+body.is-shop-page .shop-preview { flex: none; position: static; margin: 0; box-shadow: none; border-top: 1px solid #C9D3C2; }
+body.is-night.is-shop-page .shop-preview { box-shadow: none; border-top-color: #4A566C; }
+
+/* Pixel-game style for panels (shop, timer, feed menu, alert) */
+:root { --px-font: "Press Start 2P", "Courier New", monospace; --px-ink: #2B1D14; --px-bg: #F6E3B4; --px-bg2: #E8C98A; --px-accent: #D87961; --px-green: #5FA55A; }
+.shop-panel, .timer-panel, .feed-menu, .timer-alert,
+body.is-night .shop-panel, body.is-night .timer-panel, body.is-night .feed-menu, body.is-night .timer-alert {
+  border: 4px solid var(--px-ink); border-radius: 0; background: var(--px-bg); color: var(--px-ink);
+  box-shadow: inset 0 0 0 3px var(--px-bg2), 6px 6px 0 rgb(0 0 0 / 45%); backdrop-filter: none; font-family: var(--px-font); image-rendering: pixelated;
+}
+.shop-panel *, .timer-panel *, .feed-menu *, .timer-alert * { font-family: var(--px-font) !important; border-radius: 0 !important; }
+.shop-panel h2, .timer-panel h2, .feed-menu h2, .shop-category-title, .stats-section h3 { font-size: 12px !important; line-height: 1.6; letter-spacing: 0; text-transform: uppercase; text-shadow: 2px 2px 0 var(--px-bg2); }
+.shop-panel, .timer-panel, .feed-menu { font-size: 9px; line-height: 1.6; }
+
+.shop-close, .timer-close, .feed-menu-close, .shop-back, .shop-category, .stats-week-button, .add-to-cart,
+.timer-panel .timer-actions button, .feed-product, .shop-product, .furniture-style-option,
+body.is-night .timer-close, body.is-night .timer-panel .timer-actions button, body.is-night .stats-week-button {
+  border: 3px solid var(--px-ink); background: #FFF4D6; color: var(--px-ink); box-shadow: 0 4px 0 var(--px-ink); cursor: pointer; transition: none;
+  font-size: 9px; line-height: 1.5;
+}
+.shop-close:hover, .timer-close:hover, .feed-menu-close:hover, .shop-back:hover, .shop-category:hover, .stats-week-button:hover:not(:disabled),
+.add-to-cart:hover, .timer-panel .timer-actions button:hover:not(:disabled), .feed-product:hover, .furniture-style-option:hover,
+body.is-night .stats-week-button:hover:not(:disabled) { background: #FFD66B; color: var(--px-ink); }
+.shop-close:active, .timer-close:active, .shop-back:active, .shop-category:active, .stats-week-button:active, .add-to-cart:active,
+.timer-panel .timer-actions button:active, .feed-product:active { transform: translateY(4px); box-shadow: 0 0 0 var(--px-ink); }
+.shop-category.is-selected, .furniture-style-option.is-selected, .add-to-cart.is-added { background: var(--px-green); color: #fff; }
+.shop-category svg, .stats-week-button svg { shape-rendering: crispEdges; }
+.shop-close:focus-visible, .timer-close:focus-visible, .shop-back:focus-visible, .shop-category:focus-visible, .add-to-cart:focus-visible,
+.timer-panel .timer-actions button:focus-visible, .stats-week-button:focus-visible, .feed-product:focus-visible { outline: 3px dashed var(--px-accent); outline-offset: 2px; }
+
+.timer-panel .timer-display { padding: 10px 6px; border: 3px solid var(--px-ink); background: #1E2B1E; color: #7CFF6B; font-size: 22px !important; text-shadow: 2px 2px 0 #0B140B; letter-spacing: 2px; }
+.timer-panel .timer-input { border: 3px solid var(--px-ink); background: #FFF4D6; color: var(--px-ink); font-size: 10px; }
+.timer-panel .timer-actions .timer-start { background: var(--px-green); color: #fff; }
+
+.stats-section, body.is-night .stats-section { border: 3px solid var(--px-ink); background: var(--px-bg2); box-shadow: none; }
+.stats-day-track, body.is-night .stats-day-track { border: 2px solid var(--px-ink); background: #FFF4D6; }
+.stats-day-fill, body.is-night .stats-day-fill { background: repeating-linear-gradient(90deg, var(--px-accent) 0 6px, #B85A44 6px 8px); }
+.stats-demo-badge, body.is-night .stats-demo-badge { border: 2px solid var(--px-ink); background: #FFD66B; color: var(--px-ink); }
+.stats-week-label, .stats-week-total, .stats-week-total-value, .stats-empty, body.is-night .stats-week-label,
+body.is-night .stats-week-total, body.is-night .stats-week-total-value, body.is-night .stats-empty { color: var(--px-ink); }
+
+.shop-product, .feed-product { background: #FFF4D6; }
+.shop-selection { font-size: 8px; }
+.timer-alert { color: var(--px-ink); }
+
+body.is-shop-page .shop-panel {
+  --shop-square-size: min(150px, calc((100dvh - 190px) / 4), calc((100vw - 70px) / 6));
+  --px-ink: #497f77;
+  --px-bg: rgb(250 252 249 / 84%);
+  --px-bg2: #c9e8de;
+  --px-green: #68a99b;
+  inset: 0 !important;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: hidden;
+  padding: 16px 16px 12px;
+  border: 0 !important;
+  background: rgb(246 247 242 / 30%);
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+
+body.is-shop-page .shop-heading { flex: 0 0 40px; justify-content: flex-end; margin: 0; }
+body.is-shop-page .shop-heading h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+body.is-shop-page .shop-close {
+  border: 2px solid #79b9ae;
+  background: #fff;
+  box-shadow: 0 2px 0 #a8d3ca;
+}
+body.is-shop-page .shop-categories,
+body.is-shop-page .shop-categories.has-selection {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  gap: 7px;
+  max-width: min(100%, 760px);
+  margin: 0 auto 12px;
+  padding: 4px 8px 9px;
+  overflow-x: auto;
+}
+body.is-shop-page .shop-categories.has-selection .shop-category { display: grid; }
+body.is-shop-page .shop-category {
+  position: relative;
+  display: grid;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  place-items: center;
+  padding: 5px;
+  border: 2px solid #83c4b9;
+  background: #fff;
+  box-shadow: 0 2px 0 #a8d3ca;
+}
+body.is-shop-page .shop-category:hover { transform: translateY(-2px); }
+body.is-shop-page .shop-category.is-selected {
+  border-color: #4d988c;
+  background: #e2f5ed;
+  box-shadow: inset 0 0 0 2px #fff, 0 2px 0 #a8d3ca;
+}
+body.is-shop-page .shop-category svg { width: 27px; height: 27px; }
+body.is-shop-page .shop-category span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+body.is-shop-page .shop-selection {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+body.is-shop-page .shop-catalog,
+body.is-shop-page .shop-catalog:not([hidden]) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+body.is-shop-page .shop-catalog[hidden] { display: none; }
+body.is-shop-page .shop-back,
+body.is-shop-page .shop-category-title { display: none; }
+body.is-shop-page .shop-products {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 120px));
+  align-content: start;
+  justify-content: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  min-height: 0;
+  margin: 0 auto;
+  padding: 4px 6px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-products {
+  display: grid;
+  grid-template-columns: repeat(6, var(--shop-square-size));
+  grid-auto-rows: auto;
+  align-content: center;
+  justify-content: stretch;
+  gap: 7px;
+  width: min(100%, calc(var(--shop-square-size) * 6 + 42px));
+  flex: 0 1 auto;
+  align-self: center;
+  max-width: none;
+  padding: 4px 6px;
+}
+body.is-shop-page .shop-product {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: calc(var(--shop-square-size) * 0.55) auto auto;
+  align-content: start;
+  justify-items: center;
+  gap: 5px;
+  padding: 9px 6px;
+  border: 2px solid #83c4b9;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 0 #a8d3ca;
+  scroll-snap-align: start;
+}
+body.is-shop-page .shop-products > .shop-product { flex: none; }
+body.is-shop-page .shop-product:hover,
+body.is-shop-page .shop-product.is-active {
+  border-color: #4d988c;
+  background: #e7f6ee;
+}
+body.is-shop-page .shop-product-art,
+body.is-shop-page .shop-product-art--icon {
+  display: grid;
+  width: 60px;
+  height: 60px;
+  grid-column: 1;
+  grid-row: 1;
+  place-items: center;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body.is-shop-page .shop-product-art--icon svg {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+body.is-shop-page .shop-product-name {
+  grid-column: 1;
+  grid-row: 2;
+  max-width: 100%;
+  color: #302b25;
+  font: 700 10px/1.25 monospace;
+  text-align: center;
+  text-overflow: clip;
+  white-space: normal;
+}
+body.is-shop-page .shop-product-price {
+  grid-column: 1;
+  grid-row: 3;
+  color: #777267;
+  font: 600 9px/1.2 monospace;
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product {
+  min-height: 0;
+  aspect-ratio: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  align-items: center;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px;
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-art,
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-art--icon {
+  width: calc(var(--shop-square-size) * 0.44);
+  height: calc(var(--shop-square-size) * 0.44);
+  grid-row: 1;
+  justify-self: center;
+  align-self: center;
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-art--icon svg {
+  width: calc(var(--shop-square-size) * 0.42);
+  height: calc(var(--shop-square-size) * 0.42);
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-art:not(.shop-product-art--icon) {
+  background: var(--product-color);
+  clip-path: polygon(25% 0, 75% 0, 75% 10%, 90% 10%, 90% 80%, 75% 80%, 75% 100%, 25% 100%, 25% 90%, 10% 90%, 10% 20%, 25% 20%);
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-name {
+  grid-row: 2;
+  justify-self: center;
+  font-size: 8px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-price {
+  grid-row: 3;
+  align-self: center;
+  justify-self: center;
+  font-size: 7px;
+}
+body.is-shop-page .add-to-cart {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 17px;
+  height: 17px;
+  grid-column: auto;
+  grid-row: auto;
+  padding: 0;
+  border: 1px solid #79b9ae;
+  background: #fff;
+  box-shadow: none;
+  font: 700 12px/1 monospace;
+}
+body.is-shop-page .shop-product .furniture-options,
+body.is-shop-page .shop-product .furniture-custom,
+body.is-shop-page .shop-product .furniture-preview-button { display: none; }
+body.is-shop-page .shop-controls[hidden] { display: none; }
+body.is-shop-page .shop-controls {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 6px 8px;
+}
+body.is-shop-page .shop-controls .furniture-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 330px);
+  gap: 3px;
+  margin: 0;
+}
+body.is-shop-page .shop-controls .furniture-style-option {
+  padding: 6px 4px;
+  border: 1px solid #91bfb5;
+  background: #fff;
+  box-shadow: none;
+  font: 600 9px/1.3 monospace;
+}
+body.is-shop-page .shop-controls .furniture-style-option.is-selected {
+  border-color: #4d988c;
+  background: #dff2e9;
+  color: #302b25;
+}
+body.is-shop-page .shop-controls .furniture-preview-button {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid #79b9ae;
+  background: #fff;
+  box-shadow: none;
+  font: 600 9px/1.3 monospace;
+}
+body.is-shop-page .shop-controls .furniture-custom {
+  display: block;
+  margin: 0;
+  font: 500 8px/1.3 monospace;
+}
+body.is-shop-page .shop-controls .furniture-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+body.is-shop-page .shop-controls .furniture-reset {
+  padding: 4px 7px;
+  border: 1px solid #79b9ae;
+  background: #fff;
+  font: 600 8px/1.3 monospace;
+}
+body.is-shop-page .shop-controls .furniture-part input { width: 18px; height: 18px; }
+body.is-shop-page .shop-preview {
+  position: static;
+  z-index: 2;
+  align-self: center;
+  width: min(220px, 60vw);
+  margin: 2px auto 0;
+  padding: 4px 8px;
+  border: 2px solid #83c4b9;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 2px 0 #a8d3ca;
+}
+body.is-shop-page .shop-preview-stage { height: clamp(90px, 14dvh, 130px); }
+body.is-shop-page .shop-preview-name { font: 700 10px/1.4 monospace; }
+body.is-night.is-shop-page .shop-panel { background: rgb(24 36 58 / 42%); }
+body.is-night.is-shop-page .shop-category,
+body.is-night.is-shop-page .shop-product,
+body.is-night.is-shop-page .shop-close,
+body.is-night.is-shop-page .shop-preview {
+  border-color: #83c4b9;
+  background: rgb(246 247 242 / 92%);
+  color: #302b25;
+}
+
+@media (max-width: 700px) {
+  body.is-shop-page .shop-panel { padding: 10px 8px; }
+  body.is-shop-page .shop-heading { flex-basis: 34px; }
+  body.is-shop-page .shop-category {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+  }
+  body.is-shop-page .shop-products {
+    grid-template-columns: repeat(auto-fit, minmax(88px, 104px));
+    gap: 7px;
+  }
+  body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-products {
+    grid-template-columns: repeat(6, var(--shop-square-size));
+    grid-auto-rows: auto;
+    width: min(100%, calc(var(--shop-square-size) * 6 + 22px));
+    flex: 0 1 auto;
+    align-self: center;
+    gap: 4px;
+    padding: 4px 2px;
+  }
+  body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product {
+    min-height: 0;
+    aspect-ratio: 1;
+    grid-template-rows: auto auto auto;
+    gap: 2px;
+    padding: 3px 2px;
+  }
+  body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-name { font-size: 7px; }
+  body.is-shop-page:has(.shop-category[data-shop-category="food"].is-selected) .shop-product-price { font-size: 6px; }
+  body.is-shop-page .shop-product {
+    min-height: 0;
+    grid-template-rows: calc(var(--shop-square-size) * 0.55) auto auto;
+  }
+  body.is-shop-page .shop-product-art,
+  body.is-shop-page .shop-product-art--icon {
+    width: calc(var(--shop-square-size) * 0.44);
+    height: calc(var(--shop-square-size) * 0.44);
+  }
+  body.is-shop-page .shop-product-art--icon svg {
+    width: calc(var(--shop-square-size) * 0.42);
+    height: calc(var(--shop-square-size) * 0.42);
+  }
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-products {
+    grid-template-columns: repeat(3, var(--shop-square-size));
+    grid-auto-rows: var(--shop-square-size);
+    align-content: safe center;
+    width: min(100%, calc(var(--shop-square-size) * 3 + 28px));
+    flex: 0 1 auto;
+    gap: 7px;
+  }
+  body.is-shop-page .shop-preview { width: min(320px, 85vw); }
+  body.is-shop-page .shop-preview-stage { height: clamp(140px, 24dvh, 220px); }
+}
+
+@media (min-width: 701px) {
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-catalog:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(260px, 45%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 16px;
+    width: min(100%, 1050px);
+    margin: 0 auto;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-products {
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: repeat(3, var(--shop-square-size));
+    grid-auto-rows: var(--shop-square-size);
+    align-content: safe center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 6px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product {
+    min-height: 0;
+    aspect-ratio: 1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: calc(var(--shop-square-size) * 0.5) auto auto;
+    gap: 3px;
+    padding: 6px;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product-art,
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product-art--icon {
+    width: calc(var(--shop-square-size) * 0.44);
+    height: calc(var(--shop-square-size) * 0.44);
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product-art--icon svg {
+    width: calc(var(--shop-square-size) * 0.42);
+    height: calc(var(--shop-square-size) * 0.42);
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product-name {
+    font-size: 9px;
+    overflow-wrap: anywhere;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-product-price {
+    font-size: 8px;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-controls {
+    grid-column: 2;
+    grid-row: 2;
+    gap: 5px 8px;
+    width: 100%;
+    padding: 4px;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-controls .furniture-options {
+    width: min(100%, 300px);
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-preview {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    justify-self: stretch;
+    width: 100%;
+    margin: 0;
+  }
+
+  body.is-shop-page:has(.shop-category[data-shop-category="furniture"].is-selected) .shop-preview-stage {
+    height: clamp(240px, 44dvh, 380px);
+  }
+}
+
+/* Keep eating and timer features hidden while preserving their implementation. */
+.hunger-status > svg,
+.timer-toggle,
+.timer-panel,
+.timer-alert,
+.character-hotspot,
+.feed-menu,
+.coin-display,
+.shop-category[data-shop-category="food"] {
+  display: none !important;
+}
+
+.hunger-status {
+  grid-template-columns: repeat(2, 65px);
+}
+
+.room-toolbar {
+  position: fixed;
+  z-index: 5;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-toolbar > .coin-display,
+.room-toolbar > .hunger-status {
+  position: static;
+}
+
+.room-toolbar > .hunger-status {
+  grid-template-columns: repeat(2, 48px);
+}
+
+.room-toolbar .hunger-status > button {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+}
+
+.floor-navigation { position: fixed; right: clamp(16px, 8vw, 128px); left: auto; top: 50%; transform: translateY(-50%); z-index: 5; display: grid; grid-template-columns: 48px 40px 40px; grid-template-rows: 48px 48px; align-items: center; justify-items: center; column-gap: 4px; row-gap: 8px; }
+.floor-arrow { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #B0D4D2; cursor: pointer; box-shadow: none; }
+.floor-arrow[data-floor="1"] { grid-column: 1; grid-row: 1; }
+.floor-arrow[data-floor="0"] { grid-column: 1; grid-row: 2; }
+.floor-arrow svg { width: 48px; height: 48px; fill: currentColor; shape-rendering: crispEdges; image-rendering: pixelated; filter: drop-shadow(0 2px 0 #426B83); }
+.floor-arrow:hover { color: #94CAE2; }
+.floor-arrow[aria-pressed="true"] { color: #94CAE2; }
+.floor-arrow:focus-visible { outline: 3px solid #F0781C; outline-offset: 3px; }
+.floor-visibility-toggle { display: grid; grid-column: 2; grid-row: 1 / 3; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: transparent; color: #B0D4D2; cursor: pointer; }
+.floor-visibility-toggle:hover, .floor-visibility-toggle[aria-pressed="true"] { color: #94CAE2; }
+.floor-visibility-toggle:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+.floor-visibility-toggle svg { width: 30px; height: 30px; fill: currentColor; stroke: none; shape-rendering: crispEdges; image-rendering: pixelated; filter: drop-shadow(0 2px 0 #426B83); }
+.floor-visibility-toggle .eye-pupil, .floor-visibility-toggle .eye-slash { fill: #426B83; }
+.floor-visibility-toggle .eye-closed-icon, .floor-visibility-toggle[aria-pressed="false"] .eye-open-icon { display: none; }
+.floor-visibility-toggle[aria-pressed="false"] .eye-closed-icon { display: block; }
+.floor-navigation > .night-toggle { position: static; grid-column: 3; grid-row: 1 / 3; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #B0D4D2; box-shadow: none; cursor: pointer; }
+.floor-navigation > .night-toggle:hover { filter: brightness(1.12); }
+.floor-navigation > .night-toggle:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+.floor-navigation > .night-toggle svg { width: 30px; height: 30px; fill: currentColor; stroke: none; shape-rendering: crispEdges; image-rendering: pixelated; filter: drop-shadow(0 2px 0 #426B83); }
+.floor-navigation > .night-toggle.is-night { background: transparent; color: #B0D4D2; }
+body.is-night .floor-arrow { background: transparent; color: #B0D4D2; box-shadow: none; }
+body.is-night .floor-arrow[aria-pressed="true"], body.is-night .floor-arrow:hover { color: #94CAE2; }
+body.is-night .floor-visibility-toggle { background: transparent; color: #B0D4D2; }
+body.is-night .floor-visibility-toggle:hover, body.is-night .floor-visibility-toggle[aria-pressed="true"] { color: #94CAE2; }
+body.is-night .floor-navigation > .night-toggle { background: transparent; color: #B0D4D2; }
+body.is-shop-page .floor-navigation { display: none; }
+@media (max-width: 560px) { .belgian-clock { top: 20px; font-size: 18px; } }
+
+.sofa-customizer {
+  position: fixed;
+  z-index: 8;
+  top: 50%;
+  right: clamp(16px, 6vw, 88px);
+  display: grid;
+  width: min(270px, calc(100vw - 32px));
+  gap: 12px;
+  padding: 16px;
+  transform: translateY(-50%);
+  border: 1px solid #CBD5C5;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 4px 0 #DCE3D7, 0 8px 24px rgb(48 43 37 / 20%);
+  color: #302B25;
+  font: 500 12px/1.5 monospace;
+  backdrop-filter: blur(10px);
+}
+.sofa-customizer[hidden] { display: none; }
+.sofa-customizer-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sofa-customizer-heading h2 { margin: 0; font-size: 14px; }
+.sofa-customizer-close { width: 32px; height: 32px; border: 1px solid #CBD5C5; background: #fff; color: inherit; font: 24px/1 monospace; cursor: pointer; }
+.sofa-color-control { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.furniture-customizer-colors { display: grid; gap: 12px; }
+.furniture-customizer-models[hidden] { display: none; }
+.sofa-color-control input { width: 44px; height: 32px; padding: 2px; border: 1px solid #8A9B7B; background: #fff; cursor: pointer; }
+.sofa-shape-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; padding: 8px; border: 1px solid #CBD5C5; }
+.sofa-shape-options legend { padding: 0 4px; }
+/* Keuze uit drie sofamodellen: elk icoontje in een eigen kader */
+.sofa-model-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; padding: 8px; border: 1px solid #CBD5C5; }
+.sofa-model-options legend { padding: 0 4px; }
+.sofa-model-options button { display: grid; justify-items: center; gap: 4px; padding: 6px 2px; border: 2px solid #CBD5C5; background: #fff; color: inherit; font: inherit; font-size: 9px; cursor: pointer; }
+.sofa-model-options svg { width: 40px; height: 40px; image-rendering: pixelated; }
+.sofa-model-options button:hover { border-color: #8A9B7B; }
+.sofa-model-options button.is-selected { border-color: #2B1D14; background: #EDF1E8; box-shadow: inset 0 0 0 2px #839573; }
+.sofa-model-options button:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+.sofa-shape-options button, .sofa-customizer-reset { min-height: 36px; border: 1px solid #8A9B7B; background: #fff; color: inherit; font: inherit; cursor: pointer; }
+.sofa-shape-options button.is-selected { background: #839573; color: #fff; }
+.sofa-customizer-reset { padding: 6px; }
+.sofa-customizer p { margin: 0; color: #6C685F; font-size: 10px; }
+.sofa-customizer button:hover { background: #EDF1E8; color: #302B25; }
+.sofa-shape-options button.is-selected:hover { background: #839573; color: #fff; }
+body.is-sofa-customizing .room-toolbar,
+body.is-sofa-customizing .floor-navigation { display: none; }
+@media (max-width: 560px) {
+  .sofa-customizer { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; transform: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sofa-customizer-heading, .sofa-model-options, .sofa-shape-options, .sofa-customizer-reset, .sofa-customizer p, .furniture-customizer-colors { grid-column: 1 / -1; }
+}
+
+/* ---------- Intro & tutorial ---------- */
+.intro[hidden] { display: none; }
+.intro { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+/* Witte pixel-tekstballon: harde rand met getrapte hoeken, geen schaduw of vervaging */
+.intro-bubble {
+  --px-line: #2B1D14;
+  position: absolute;
+  /* Links in het midden, naast het opzij geschoven huis */
+  top: 50%;
+  left: clamp(24px, 3vw, 64px);
+  translate: 0 -50%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: min(430px, calc(100vw - 80px));
+  gap: 12px;
+  padding: 0 4px;
+  /* Strip-tekstballon: pixelrand met getrapte, afgeronde hoeken (9-slice uit een klein pixel-SVG) */
+  border: 24px solid transparent;
+  border-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2756%27%20height%3D%2756%27%20shape-rendering%3D%27crispEdges%27%3E%3Crect%20x%3D%2716%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3C%2Fsvg%3E") 24 fill / 24px stretch;
+  background: none;
+  color: var(--px-line);
+  font: 500 15px/1.6 monospace;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  animation: intro-bubble-in 0.35s 0.2s steps(4, end) both;
+}
+.intro-step-count { margin: 0; color: #8A7B6B; font: 400 10px/1 var(--px-font, monospace); }
+/* Het puntje: pixel-wig die rechts uit de ballon naar het huis wijst; de basis valt over de rand zodat die opengaat */
+.intro-bubble::after { content: ""; position: absolute; top: 50%; right: -68px; width: 48px; height: 48px; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2748%27%20height%3D%2748%27%20shape-rendering%3D%27crispEdges%27%3E%3Crect%20x%3D%270%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3C%2Fsvg%3E") no-repeat; image-rendering: pixelated; }
+.intro-bubble h2 { margin: 0; font: 400 17px/1.4 var(--px-font, monospace); color: var(--px-line); }
+.intro-text { margin: 0; }
+.intro-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; }
+.intro-bubble button {
+  min-height: 38px; margin: 3px; padding: 8px 10px; border: 0; background: #fff; color: var(--px-line);
+  box-shadow: 0 -3px 0 0 var(--px-line), 0 3px 0 0 var(--px-line), -3px 0 0 0 var(--px-line), 3px 0 0 0 var(--px-line);
+  font: 400 11px/1 var(--px-font, monospace); cursor: pointer;
+}
+.intro-bubble button:hover:not(:disabled) { background: #F3EEE6; }
+.intro-bubble button:active:not(:disabled) { transform: translateY(2px); }
+.intro-bubble button:disabled { opacity: 0.35; cursor: default; }
+.intro-bubble button:focus-visible { outline: 3px solid #F0781C; outline-offset: 5px; }
+.intro-skip { margin-right: auto !important; box-shadow: none !important; padding-left: 0 !important; color: #8A7B6B !important; }
+.intro-next, .intro-action { background: #68A99B !important; color: #fff !important; }
+.intro-next:hover, .intro-action:hover { background: #497F77 !important; }
+.intro-action { justify-self: start; }
+.is-tutorial-highlight:not(#room-scene) { outline: 3px dashed #F0781C; outline-offset: 4px; animation: tutorial-pulse 1.2s ease-in-out infinite; }
+.tutorial-toggle { position: fixed; z-index: 6; top: 16px; left: 16px; width: 40px; height: 40px; padding: 0; border: 0; background: #B0D4D2; color: #fff; font: 16px/1 var(--px-font, monospace); cursor: pointer; box-shadow: 0 3px 0 #426B83; }
+.tutorial-toggle:hover { background: #94CAE2; }
+.tutorial-toggle:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+body.is-intro .tutorial-toggle:not(.is-tutorial-highlight) { visibility: hidden; }
+@keyframes intro-bubble-in { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tutorial-pulse { 50% { outline-color: #FFD93D; } }
+/* Gsm staand: tekstballon over de volle breedte onderaan, huis erboven */
+@media (max-width: 700px) {
+  .intro { display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; padding: 0 12px calc(12px + env(safe-area-inset-bottom)); }
+  .intro-bubble { position: relative; top: auto; left: auto; translate: none; width: 100%; max-width: 480px; margin: 48px 0 0; gap: 10px; padding: 0 2px; font-size: 14px; line-height: 1.5; }
+  .intro-bubble::after { top: -68px; right: auto; left: 48px; transform: rotate(-90deg); }
+  .intro-bubble h2 { font-size: 15px; }
+  .intro-buttons { flex-wrap: wrap; }
+  .intro-bubble button { min-height: 40px; }
+  /* Verdiepingsknoppen niet bovenop het huis: onderaan in het midden, tijdens de uitleg rechtsboven */
+  .floor-navigation { top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); right: 50%; transform: translateX(50%); }
+  body.is-intro .floor-navigation { top: 64px; bottom: auto; right: 12px; transform: none; }
+}
+/* Gsm liggend: smallere ballon links, huis rechts en knoppen rechtsonder */
+@media (max-height: 500px) and (min-width: 701px) {
+  .intro-bubble { top: 50%; left: 24px; width: min(360px, 44vw); gap: 8px; padding: 0 2px; font-size: 13px; line-height: 1.5; }
+  .intro-bubble h2 { font-size: 14px; }
+  .intro-buttons { flex-wrap: wrap; }
+  body.is-intro .floor-navigation { top: auto; bottom: 12px; right: 12px; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-bubble, .is-tutorial-highlight { animation: none; }
+}
+
+/* ---------- Sterrenhemel (nachtmodus) ---------- */
+#room-scene { position: relative; }
+#room-scene canvas { position: relative; z-index: 1; }
+.night-stars { position: absolute; inset: 0 0 auto; height: 55%; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 0.8s ease; }
+body.is-night .night-stars { opacity: 1; }
+.night-stars i { position: absolute; width: 3px; height: 3px; background: #FFF6D6; image-rendering: pixelated; animation: star-twinkle 3s steps(3, end) infinite; }
+.night-stars i:nth-child(3n) { width: 2px; height: 2px; background: #CFE3FF; }
+/* Grotere fonkelster: een pixelkruisje */
+.night-stars i.is-sparkle { width: 3px; height: 3px; background: #FFE89A; box-shadow: 3px 0 #FFE89A, -3px 0 #FFE89A, 0 3px #FFE89A, 0 -3px #FFE89A; }
+@keyframes star-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .night-stars i { animation: none; } }
+
+/* ---------- Aanpaspanelen in pixelstijl (zelfde rand als de tekstballon) ---------- */
+.sofa-customizer {
+  --px-line: #2B1D14;
+  width: min(330px, calc(100vw - 32px));
+  padding: 0 4px;
+  border: 24px solid transparent;
+  border-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2756%27%20height%3D%2756%27%20shape-rendering%3D%27crispEdges%27%3E%3Crect%20x%3D%2716%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%270%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%274%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%278%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2712%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2716%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2720%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2724%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2728%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2732%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%270%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2752%27%20y%3D%2736%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2740%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%274%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2748%27%20y%3D%2744%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2712%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23FFFFFF%27%2F%3E%3Crect%20x%3D%2740%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2744%27%20y%3D%2748%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2716%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2720%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2724%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2728%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2732%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3Crect%20x%3D%2736%27%20y%3D%2752%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%232B1D14%27%2F%3E%3C%2Fsvg%3E") 24 fill / 24px stretch;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: var(--px-line);
+  image-rendering: pixelated;
+}
+.sofa-customizer-heading h2 { font: 400 12px/1.4 var(--px-font, monospace); }
+.sofa-customizer legend { padding: 0 2px 6px; font: 400 9px/1 var(--px-font, monospace); }
+.sofa-model-options, .sofa-shape-options { padding: 0; border: 0; }
+.sofa-customizer button,
+.sofa-color-control input {
+  margin: 3px;
+  border: 0;
+  background: #fff;
+  color: var(--px-line);
+  box-shadow: 0 -3px 0 0 var(--px-line), 0 3px 0 0 var(--px-line), -3px 0 0 0 var(--px-line), 3px 0 0 0 var(--px-line);
+  font: 400 9px/1.2 var(--px-font, monospace);
+}
+.sofa-customizer button:hover { background: #F3EEE6; color: var(--px-line); }
+.sofa-customizer button:active { transform: translateY(2px); }
+.sofa-customizer button:focus-visible, .sofa-color-control input:focus-visible { outline: 3px solid #F0781C; outline-offset: 5px; }
+.sofa-customizer-close { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; font: 400 12px/1 var(--px-font, monospace) !important; }
+.sofa-model-options button { font-size: 8px; padding: 6px 2px; }
+.sofa-model-options button.is-selected { background: #FFF3C4; box-shadow: 0 -3px 0 0 var(--px-line), 0 3px 0 0 var(--px-line), -3px 0 0 0 var(--px-line), 3px 0 0 0 var(--px-line), inset 0 0 0 3px #F0781C; }
+.sofa-shape-options button.is-selected, .sofa-shape-options button.is-selected:hover { background: #68A99B; color: #fff; }
+.sofa-color-control { font: 500 12px/1.4 monospace; }
+.sofa-color-control input { width: 40px; height: 28px; padding: 2px; }
+.sofa-customizer-reset { min-height: 34px; }
+.sofa-customizer p { color: #8A7B6B; }
+
+/* ---------- Knop: terug naar het hele huis ---------- */
+.view-reset { position: fixed; z-index: 6; top: 16px; left: 64px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: #B0D4D2; cursor: pointer; box-shadow: 0 3px 0 #426B83; }
+.view-reset svg { width: 24px; height: 24px; image-rendering: pixelated; }
+.view-reset:hover { background: #94CAE2; }
+.view-reset:focus-visible { outline: 3px solid #F0781C; outline-offset: 2px; }
+body.is-sofa-customizing .view-reset { display: grid; }
