@@ -94,6 +94,8 @@ AGENTS.md / CLAUDE.md      instructies voor coding agents
 
 GitHub Actions bouwt en publiceert de site automatisch bij pushes naar `main` of `feature/knoppen-en-gloeien`. De productiebuild gebruikt het repositorypad van GitHub Pages; lokaal blijft Vite op `/` bouwen.
 
+Voor de eerste publicatie moet je in de repository bij **Settings → Pages → Build and deployment → Source** eenmalig **GitHub Actions** kiezen.
+
 ## Technologie
 
 - [Vite 8](https://vite.dev): dev-server en build
