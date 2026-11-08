@@ -1,27 +1,98 @@
-# Pixel Home — The Living Room
+# Pixel Home — richt je eigen huisje in
 
-A cozy isometric pixel-art living room built with Vite, JavaScript, and Three.js. Its brighter palette uses darkest background `#1D0A0A`, deep brown `#432A24`, dark wood `#694334`, brown `#906044`, warm coral `#D46B4D`, terracotta `#F08B5E`, sunny wood `#F0BD62`, warm light `#FFE59A`, mint `#A8D8C5`, dark gray `#56625A`, and beige walls `#D8C7A5`. The foliage uses forest green `#3E7950` and olive green `#8DAA4F`.
+Een gezellig pixel-art huisje in 3D dat je helemaal zelf inricht. Het is een single-page site, gebouwd met **Vite + three.js**. Je draait en zoomt rond het huis en klikt op de sofa, het bureau of de keuken om hun model en kleuren te veranderen. Een korte tutorial in een pixel-stripballon legt alles uit.
 
-## Run
+- **Live:** _(vul in na deploy op Vercel)_
+- **Repository:** https://github.com/lisamariemaxine-bot/my-configurator
+
+![Moodboard](docs/moodboard.png)
+
+## Concept en visuele identiteit
+
+Het product is een **configureerbare woonkamer**: een huisje dat aanvoelt als een cozy game. De stijl komt rechtstreeks uit het [moodboard](docs/moodboard.png).
+
+| Moodboard | Waar je het terugziet |
+|---|---|
+| Bitmap-/pixelfonts ("Game", "Arcade") | `Press Start 2P` voor titels en knoppen, pixelranden, een tekstballon met getrapte hoeken |
+| Pixel-mozaïek in warme aardetinten | Voxel-/pixelrendering (pixelratio 0,5, `image-rendering: pixelated`), warm palet |
+| Oranje hanglamp | De oranje hanglamp boven de zithoek |
+| Groene corduroy zitzak | De groene poef naast de sofa |
+| Hangplant en planten | Hangplanten op de plank en bij het raam, planten in echte potten |
+| Oude boeken | Boekenrijen met bladzijden, liggende stapels en leunende boeken |
+| Hout en koffie/plaid | Houten vloer, warm lamplicht en een nachtmodus met glinsterende pixelsterren |
+| Kleurvlakken (bruin, roze, lichtblauw, oker, olijf) | Het basispalet in [`src/palette.js`](src/palette.js) |
+
+## Wat kan je configureren?
+
+Klik in de kamer op de sofa, het bureau of de keuken. Er opent een wit paneel met keuzes, en je ziet elke aanpassing meteen.
+
+| Voorwerp | Eigenschappen |
+|---|---|
+| **Sofa** | 3 modellen (Modern, Chesterfield, Retro) · kleur sofa · kleur sierkussens · vorm van de zitkussens (rond/strak) |
+| **Bureau en stoel** (één set) | 3 sets (Modern, Gaming, Vintage) · kleur bureau en stoel · kleur zitkussen of bekleding · lampenkap of ledstrip |
+| **Keuken** | 3 modellen (Klassiek, Strak, Retro) · kleur kastjes · werkblad · grepen of accenten |
+| **Hele huis** | dag/nacht (start altijd overdag; 's nachts verschijnen sterren) · benedenverdieping/bovenverdieping · doorzichtige verdieping aan/uit |
+
+Alle keuzes worden bewaard in `localStorage`, dus na een refresh is je huisje nog hetzelfde.
+
+## Bediening
+
+- **Draaien:** slepen met de muis of één vinger.
+- **Zoomen:** scrollen of knijpen (begrensd, zodat je nooit verdwaalt).
+- **Terug naar het hele huis:** de huisjesknop linksboven.
+- **Aanpassen:** klik of tik op de sofa, het bureau of de keuken.
+- **Uitleg:** de tutorial start bij elke refresh. Met de **?**-knop linksboven open je hem opnieuw, met Esc sluit je panelen.
+
+## Starten
+
+Vereist Node 20 of nieuwer en npm.
 
 ```sh
 npm install
-npm run dev
+npm run dev        # ontwikkelserver op http://localhost:5173
+npm run build      # productiebuild in dist/
+npm run preview    # de build lokaal bekijken
 ```
 
-Open the local URL printed by Vite. For a production build, run `npm run build`; use `npm run preview` to serve that build locally.
+## Testen
 
-## Controls
+```sh
+npm test           # unit-tests (Vitest): paletten, meubelconfig, hulpfuncties
+npm run test:e2e   # browsertests (Playwright): desktop 1440×900 en mobiel Pixel 7
+npm run check      # alles: unit-tests, build en browsertests
+```
 
-- Drag to orbit the room; scroll or pinch to zoom.
-- WebGL is required. Google Fonts are optional.
+De browsertests gebruiken de geïnstalleerde **Google Chrome** (`channel: 'chrome'`) met de echte GPU, dus er is geen extra browserdownload nodig. Ze starten zelf een dev-server op poort 5199. Wat er getest wordt, staat in [PLAN.md](PLAN.md#testplan).
 
-## Where to practice
+## Projectstructuur
 
-- `src/main.js`: page markup and camera controls.
-- `src/living-room.js`: voxel furniture, plants, palette, lighting, and camera.
-- `src/room-view.css`: full-screen white canvas styling.
+```
+index.html                 één pagina (lang="nl")
+vite.config.js             Vite + Vitest-config
+playwright.config.js       browsertests (desktop + mobiel)
+src/
+  main.js                  UI: panelen, tutorial, opslag, events
+  living-room.js           three.js-scène: kamer, meubels en modellen, camera, klikken
+  bedroom.js               bovenverdieping (slaapkamer)
+  palette.js               kleurpaletten + resolveColor()
+  furniture-config.js      winkelitems, pixelicoontjes, modellen en kleurkiezers per meubel
+  utils.js                 pure hulpfuncties (getest)
+  room-view.css            alle styling, inclusief responsive en de tekstballon
+tests/unit/                Vitest
+tests/e2e/                 Playwright
+docs/moodboard.png         moodboard
+docs/AI-WERKWIJZE.md       prompts, iteraties en debugging met AI
+PLAN.md                    plan, beslissingen en testplan
+AGENTS.md / CLAUDE.md      instructies voor coding agents
+```
 
-## Verification
+## Deploy (Vercel)
 
-Run `npm run build` to verify the production bundle. Check the room at desktop and mobile sizes, and confirm orbit and zoom work.
+Vercel herkent Vite automatisch: build command `npm run build`, output `dist`. Importeer de GitHub-repo op vercel.com, of gebruik `npx vercel --prod`.
+
+## Technologie
+
+- [Vite 8](https://vite.dev): dev-server en build
+- [three.js 0.186](https://threejs.org): 3D, met `OrbitControls` en `RoundedBoxGeometry`
+- [Vitest](https://vitest.dev) en [Playwright](https://playwright.dev): tests
+- npm met `package-lock.json` voor reproduceerbare installs
