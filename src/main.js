@@ -216,9 +216,11 @@ document.querySelector('#app').innerHTML = `
     <p class="feed-empty">De koelkast is leeg.</p>
     <div class="feed-products" role="list"></div>
   </aside>
-  <button class="tutorial-toggle" type="button" aria-label="Uitleg opnieuw bekijken" title="Uitleg">?</button>
+  <button class="tutorial-toggle" type="button" aria-label="Uitleg opnieuw bekijken" title="Uitleg">
+    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 1h4v1H4zM3 2h2v2H3zM7 2h2v2H7zM6 4h2v1H6zM5 5h2v2H5zM5 8h2v2H5z"/></svg>
+  </button>
   <button class="house-reset" type="button" aria-label="Alle kleuren en meubels terugzetten naar standaard" title="Alles terugzetten">
-    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 1h4v1h1v1h1v2H8V4H7V3H5v1H4v1H3v2h1v1h1v1h2V8h1V7h2v2H9v1H8v1H4v-1H3V9H2V8H1V4h1V3h1V2h1zM0 2h3v3H0z"/></svg>
+    <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 2h4v2H4zM3 3h1v1H3zM2 4h2v5H2zM3 9h1v1H3zM4 9h4v2H4zM8 9h1v1H8zM9 6h2v3H9zM8 0h1v6H8zM9 1h1v4H9zM10 2h1v2h-1z"/></svg>
   </button>
   <button class="house-photo" type="button" aria-label="Maak een foto van je huis" title="Foto maken">
     <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#fff" d="M4 2h4v1h3v8H1V3h3zM5 5v1H4v2h1v1h2V8h1V6H7V5z"/><path fill="#426B83" d="M5 5h2v1h1v2H7v1H5V8H4V6h1z"/><path fill="#fff" d="M9 4h1v1H9z"/></svg>
