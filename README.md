@@ -2,7 +2,7 @@
 
 Een gezellig pixel-art huisje in 3D dat je helemaal zelf inricht. Het is een single-page site, gebouwd met **Vite + three.js**. Je draait en zoomt rond het huis en klikt op meubels (beneden sofa, bureau en keuken, boven bed, douche en make-uptafel) om hun model en kleuren te veranderen. Een korte tutorial in een pixel-stripballon legt alles uit.
 
-- **Live:** _(vul in na deploy op Vercel)_
+- **Live:** https://lisamariemaxine-bot.github.io/my-configurator/
 - **Repository:** https://github.com/lisamariemaxine-bot/my-configurator
 
 ![Moodboard](docs/moodboard.png)
@@ -90,9 +90,9 @@ PLAN.md                    plan, beslissingen en testplan
 AGENTS.md / CLAUDE.md      instructies voor coding agents
 ```
 
-## Deploy (Vercel)
+## Deploy (GitHub Pages)
 
-Vercel herkent Vite automatisch: build command `npm run build`, output `dist`. Importeer de GitHub-repo op vercel.com, of gebruik `npx vercel --prod`.
+GitHub Actions bouwt en publiceert de site automatisch bij pushes naar `main` of `feature/knoppen-en-gloeien`. De productiebuild gebruikt het repositorypad van GitHub Pages; lokaal blijft Vite op `/` bouwen.
 
 ## Technologie
 
