@@ -2207,7 +2207,15 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
   const UPPER_FLOOR_CAMERA_DROP = 1.1
   const cameraHeightFor = floorHeight => floorHeight - UPPER_FLOOR_CAMERA_DROP * (floorHeight / 5.2)
 
+  let upstairsGlowTimer = null
+  function flashUpstairsFurniture() {
+    window.clearTimeout(upstairsGlowTimer)
+    setFurnitureGlow(hoverTargets.filter(target => (furnitureFloor[target.name] ?? 0) === 1))
+    upstairsGlowTimer = window.setTimeout(() => setFurnitureGlow(tutorialGlowTarget ?? null), 1400)
+  }
+
   function setFloor(floor) {
+    window.clearTimeout(upstairsGlowTimer)
     if ((floor !== 0 && floor !== 1) || floor === activeFloor) return
     setFurnitureGlow(null)
     cameraTransition = null
@@ -2253,6 +2261,8 @@ export function createLivingRoom(container, onMoodUpdate = () => {}, onCharacter
       controls.enabled = true
       controls.enableDamping = true
       if (displayedFloorHeight === 0) upperFloorOpacity = getUpperFloorOpacity(0)
+      // Boven aangekomen: laat even zien welke meubels je hier kan aanpassen
+      if (activeFloor === 1) flashUpstairsFurniture()
     }
   }
 
